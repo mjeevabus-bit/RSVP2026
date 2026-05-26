@@ -1,0 +1,733 @@
+<!doctype html>
+<html class="h-full">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Class Reunion RSVP - RPG Edition</title>
+  <script src="https://cdn.tailwindcss.com/3.4.17"></script>
+  <script src="https://cdn.jsdelivr.net/npm/lucide@0.263.0/dist/umd/lucide.min.js"></script>
+  <script src="/_sdk/element_sdk.js"></script>
+  <script src="/_sdk/data_sdk.js"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&family=DotGothic16&display=swap');
+
+    html, body {
+      height: 100%;
+      margin: 0;
+      overflow-x: hidden;
+    }
+
+    /* 結合英文像素字體與日系/中文像素字體 */
+    * {
+      font-family: 'Press Start 2P', 'DotGothic16', monospace;
+      image-rendering: pixelated;
+    }
+
+    /* 雙層高質感像素邊框 */
+    .pixel-border-double {
+      border: 4px solid #fff;
+      box-shadow: 
+        0 0 0 4px #111,
+        inset 0 0 0 2px #fff,
+        inset 0 0 0 4px #000;
+      background: linear-gradient(180deg, #090947 0%, #02021c 100%);
+    }
+
+    .pixel-border-gold {
+      border: 4px solid #ffe066;
+      box-shadow: 
+        0 0 0 4px #111,
+        inset 0 0 0 2px #ffe066,
+        inset 0 0 0 4px #000;
+      background: linear-gradient(180deg, #0f1c3f 0%, #060c22 100%);
+    }
+
+    /* 像素按鈕 */
+    .pixel-btn-rpg {
+      position: relative;
+      border: 3px solid #fff;
+      box-shadow: 3px 3px 0 #000;
+      transition: all 0.05s ease;
+    }
+    .pixel-btn-rpg:active {
+      transform: translate(3px, 3px);
+      box-shadow: 0px 0px 0 #000;
+    }
+    .pixel-btn-rpg::after {
+      content: '';
+      position: absolute;
+      inset: 1px;
+      border: 1px solid rgba(255,255,255,0.3);
+      pointer-events: none;
+    }
+
+    /* CRT 電視掃描線效果 */
+    .crt::after {
+      content: " ";
+      display: block;
+      position: absolute;
+      top: 0; left: 0; bottom: 0; right: 0;
+      background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06));
+      aspect-ratio: auto;
+      background-size: 100% 4px, 6px 100%;
+      pointer-events: none;
+      z-index: 99;
+    }
+
+    /* 呼吸燈效果 */
+    @keyframes pulse-gold {
+      0%, 100% { border-color: #ffe066; box-shadow: 0 0 8px rgba(255,224,102,0.4); }
+      50% { border-color: #ffb703; box-shadow: 0 0 16px rgba(255,183,3,0.7); }
+    }
+    .pulse-border {
+      animation: pulse-gold 3s infinite;
+    }
+
+    /* 漂浮動畫 */
+    @keyframes float {
+      0%, 100% { transform: translateY(0px) rotate(0deg); }
+      50% { transform: translateY(-8px) rotate(1deg); }
+    }
+    .float-anim {
+      animation: float 4s ease-in-out infinite;
+    }
+
+    /* 星星閃爍 */
+    @keyframes pixel-blink {
+      0%, 100% { opacity: 0.2; transform: scale(0.8); }
+      50% { opacity: 1; transform: scale(1.2); }
+    }
+    .pixel-star {
+      position: absolute;
+      width: 6px;
+      height: 6px;
+      background: #ffe066;
+      box-shadow: 0 0 4px #ffe066;
+      animation: pixel-blink 2s step-end infinite;
+    }
+
+    /* 飄字傷害效果 */
+    @keyframes dmgFloat {
+      0% { opacity: 1; transform: translateY(0) scale(1); }
+      100% { opacity: 0; transform: translateY(-40px) scale(1.2); }
+    }
+    .dmg-text {
+      animation: dmgFloat 0.8s cubic-bezier(0.18, 0.89, 0.32, 1.28) forwards;
+      text-shadow: 2px 2px 0 #000;
+    }
+
+    /* 隱藏原生卷軸美化 */
+    ::-webkit-scrollbar {
+      width: 8px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #02021c;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #53a8b6;
+      border: 2px solid #02021c;
+    }
+  </style>
+</head>
+<body class="w-full bg-[#121224] text-[#e0e0e0] crt relative overflow-y-auto selection:bg-[#ffe066] selection:text-[#000]">
+
+  <!-- 背景點綴：像素星星 -->
+  <div class="absolute inset-0 pointer-events-none overflow-hidden z-0">
+    <div class="pixel-star" style="top:10%; left:15%; animation-delay:0.1s"></div>
+    <div class="pixel-star" style="top:25%; left:85%; animation-delay:0.7s"></div>
+    <div class="pixel-star" style="top:45%; left:5%; animation-delay:1.3s"></div>
+    <div class="pixel-star" style="top:75%; left:90%; animation-delay:0.4s"></div>
+    <div class="pixel-star" style="top:85%; left:20%; animation-delay:0.9s"></div>
+    <div class="pixel-star" style="top:60%; left:75%; animation-delay:1.1s"></div>
+    <div class="pixel-star" style="top:35%; left:48%; animation-delay:1.6s"></div>
+  </div>
+
+  <!-- 主畫面框架 -->
+  <div id="app" class="min-h-full w-full flex flex-col items-center justify-center p-3 md:p-6 z-10 relative">
+    
+    <!-- 頂部戰鬥提示 -->
+    <div class="text-center mb-6 z-10 w-full max-w-4xl">
+      <div class="inline-block px-4 py-2 bg-red-900/80 border-2 border-red-500 text-red-400 text-xs tracking-widest font-bold uppercase mb-2 animate-pulse rounded">
+        ⚔️ EVENT ENCOUNTER: CLASS REUNION ⚔️
+      </div>
+      <p class="text-[10px] md:text-xs text-slate-500 uppercase tracking-widest">TURN 2026 — ACTIVE QUEST</p>
+    </div>
+
+    <!-- 雙欄式戰鬥佈局 (RWD: 桌機雙欄，手機單欄) -->
+    <div class="w-full max-w-4xl grid grid-cols-1 lg:grid-cols-12 gap-6 items-start z-10">
+      
+      <!-- 左欄：BOSS 資訊 & 任務細節 (佔 5 欄) -->
+      <div class="lg:col-span-5 flex flex-col gap-4 w-full">
+        
+        <!-- Boss 怪物美術視窗 (仿舊懷舊框) -->
+        <div id="boss-window" class="pixel-border-gold pulse-border p-4 text-center relative overflow-hidden bg-black/40">
+          <div class="absolute inset-0 bg-gradient-to-b from-transparent via-black/10 to-black/60 pointer-events-none"></div>
+          
+          <div class="text-[10px] text-red-500 font-bold mb-1 tracking-wider">★ BOSS LEVEL 99 ★</div>
+          <h2 id="title" class="text-base md:text-lg font-bold text-[#ffe066] leading-tight mb-2 filter drop-shadow-[0_2px_0_rgba(0,0,0,1)]">
+            同學會邀請函
+          </h2>
+          
+          <!-- 趣味 Boss 頭像區 (純 CSS & Emoji 像素風) -->
+          <div class="my-4 relative h-28 flex items-center justify-center float-anim">
+            <!-- 魔法傳送陣底座 -->
+            <div class="absolute bottom-1 w-24 h-4 bg-purple-900/50 rounded-full blur-[2px] border border-purple-500/30 animate-pulse"></div>
+            <!-- Boss 圖示 -->
+            <div class="relative z-10 text-6xl select-none filter drop-shadow-[0_4px_8px_rgba(0,0,0,0.5)]">
+              🍻
+            </div>
+            <!-- 閃爍魔法微粒 -->
+            <div class="absolute top-4 left-1/4 w-2 h-2 bg-yellow-400 rounded-sm animate-ping"></div>
+            <div class="absolute bottom-6 right-1/4 w-2.5 h-2.5 bg-blue-400 rounded-sm animate-bounce" style="animation-delay: 0.5s"></div>
+          </div>
+
+          <p id="subtitle" class="text-xs text-[#53a8b6] px-2 leading-relaxed h-12 flex items-center justify-center">
+            好久不見！一起來敘敘舊吧！
+          </p>
+        </div>
+
+        <!-- Boss HP 血條 -->
+        <div class="pixel-border-double p-3 bg-black/80">
+          <div class="flex justify-between items-center mb-1.5">
+            <span class="text-[10px] text-[#ffe066] font-bold tracking-wider">👾 BOSS HP</span>
+            <span class="text-[10px] text-red-400 font-bold tracking-wider">READY TO RAID</span>
+          </div>
+          <div class="relative h-6 border-2 border-black bg-black p-0.5 overflow-hidden">
+            <!-- 動態血條 -->
+            <div id="hp-bar" class="h-full bg-gradient-to-r from-red-600 via-rose-500 to-red-400 transition-all duration-500 ease-out shadow-[inset_-4px_0_0_#991b1b]" style="width: 100%;">
+              <div class="absolute inset-0 bg-white/10 animate-pulse"></div>
+            </div>
+            <span id="hp-text" class="absolute inset-0 flex items-center justify-center text-[10px] text-white font-extrabold tracking-widest drop-shadow-[1px_1px_0_#000]">
+              100% / 100%
+            </span>
+          </div>
+        </div>
+
+        <!-- 任務詳細資訊 (Quest Details) -->
+        <div class="pixel-border-double p-4 relative">
+          <div class="absolute -top-3 left-4 bg-[#121224] px-2 text-[10px] text-[#ffe066] font-bold tracking-wider">
+            📜 QUEST LOG
+          </div>
+          
+          <div class="space-y-4 mt-1">
+            <div class="flex items-start gap-3">
+              <div class="text-lg mt-0.5 select-none text-[#ffe066]">📅</div>
+              <div>
+                <p class="text-[9px] text-slate-400 tracking-wider">QUEST TIME</p>
+                <p id="date-text" class="text-xs text-white font-medium mt-0.5 leading-relaxed">2026/10/?? 11:00 開始入座</p>
+              </div>
+            </div>
+            
+            <div class="flex items-start gap-3">
+              <div class="text-lg mt-0.5 select-none text-[#ffe066]">📍</div>
+              <div>
+                <p class="text-[9px] text-slate-400 tracking-wider">QUEST DUNGEON</p>
+                <p id="location-text" class="text-xs text-white font-medium mt-0.5 leading-relaxed">
+                  迪宅DeeJai Bistro<br>
+                  <span class="text-[10px] text-slate-400">台北市大同區迪化街一段318號</span>
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- 右欄：玩家行動選單 / 回覆表單 (佔 7 欄) -->
+      <div id="main-card" class="lg:col-span-7 pixel-border-gold p-4 md:p-6 w-full relative">
+        
+        <!-- 漂浮數字產生地 -->
+        <div id="damage-container" class="absolute inset-0 pointer-events-none overflow-hidden z-20"></div>
+
+        <!-- 表單視窗 -->
+        <div id="rsvp-form">
+          <div class="flex justify-between items-center mb-4 border-b-2 border-dashed border-slate-700 pb-3">
+            <h3 class="text-xs md:text-sm text-[#ffe066] tracking-wider">⚔️ PARTY COMMANDS ⚔️</h3>
+            <span class="text-[9px] text-emerald-400">● MULTIPLAYER</span>
+          </div>
+
+          <!-- 冒險者名字輸入欄位 -->
+          <div class="mb-5">
+            <label class="block text-[10px] text-[#53a8b6] mb-2 tracking-widest uppercase">👤 ADVENTURER NAME</label>
+            <div class="relative">
+              <span class="absolute left-3 top-3.5 text-xs text-slate-500 font-bold select-none">▶</span>
+              <input id="name-input" type="text" placeholder="輸入你的冒險者名字..." oninput="updatePartyName(this.value)"
+                     class="w-full pl-8 pr-3 py-3 text-xs border-2 border-slate-600 bg-black/40 text-white outline-none focus:border-[#ffe066] transition-all placeholder:text-slate-600">
+            </div>
+          </div>
+
+          <!-- 接受/拒絕 任務按鈕 -->
+          <div class="mb-5">
+            <label class="block text-[10px] text-[#53a8b6] mb-2 tracking-widest uppercase">⚔️ SELECT ACTION</label>
+            <div class="grid grid-cols-2 gap-3">
+              <button id="btn-yes" onclick="selectAttend('yes')" class="pixel-btn-rpg p-3.5 text-xs bg-emerald-900 text-[#ffe066] hover:bg-emerald-800 flex items-center justify-center gap-1.5 rounded-sm">
+                <span class="text-xs">⚔️</span> 接受挑戰
+              </button> 
+              <button id="btn-no" onclick="selectAttend('no')" class="pixel-btn-rpg p-3.5 text-xs bg-rose-950 text-[#ffe066] hover:bg-rose-900 flex items-center justify-center gap-1.5 rounded-sm">
+                <span class="text-xs">🛡️</span> 暫時撤退
+              </button>
+            </div>
+          </div>
+
+          <!-- 留言宣言 -->
+          <div class="mb-6">
+            <label class="block text-[10px] text-[#53a8b6] mb-2 tracking-widest uppercase">💬 BATTLE CRY (選填)</label>
+            <textarea id="msg-input" rows="2" placeholder="留下你在同學會上的登場台詞..." 
+                      class="w-full p-3 text-xs border-2 border-slate-600 bg-black/40 text-white outline-none focus:border-[#ffe066] transition-all resize-none placeholder:text-slate-600"></textarea>
+          </div>
+
+          <!-- 動態派對狀態欄 (仿經典 FF 戰鬥隊伍狀態) -->
+          <div class="pixel-border-double p-3 mb-5 bg-black/90">
+            <table class="w-full text-left text-[9px] md:text-[10px]">
+              <thead>
+                <tr class="border-b border-slate-700 text-slate-400">
+                  <th class="pb-1">NAME</th>
+                  <th class="pb-1">HP</th>
+                  <th class="pb-1">MP</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr class="text-white">
+                  <td id="party-member-name" class="pt-2 text-emerald-400 font-bold truncate max-w-[120px]">冒險者</td>
+                  <td class="pt-2">
+                    <span id="party-hp">100</span>/<span class="text-slate-500">100</span>
+                  </td>
+                  <td class="pt-2">
+                    <span id="party-mp">99</span>/<span class="text-slate-500">99</span>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <!-- 送出回覆按鈕 -->
+          <button id="submit-btn" onclick="submitRSVP()" class="pixel-btn-rpg w-full p-4 text-xs font-bold text-black bg-[#ffe066] hover:bg-yellow-300 disabled:opacity-40 disabled:cursor-not-allowed transition-colors" disabled>
+            ★ 發送作戰計畫 ★
+          </button>
+          
+          <p id="error-msg" class="text-center text-[10px] font-bold mt-3 text-red-500 hidden tracking-wider animate-bounce"></p>
+        </div>
+
+        <!-- 成功戰利品畫面 (Victory Screen) -->
+        <div id="success-view" class="hidden text-center py-6 animate-fade-in">
+          <p class="text-xs md:text-sm mb-4 text-[#ffe066] tracking-widest animate-pulse">🎉 QUEST COMPLETED! 🎉</p>
+          
+          <div class="text-2xl md:text-3xl mb-6 float-anim text-amber-300 filter drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)]">
+            ⭐ EXP +9999 ⭐
+          </div>
+          
+          <div class="pixel-border-double p-4 bg-black/50 mb-6 max-w-sm mx-auto">
+            <p id="success-text" class="text-xs md:text-sm text-emerald-400 font-bold leading-relaxed mb-1"></p>
+            <p class="text-[10px] text-slate-400">已成功將回覆傳送至伺服器大廳</p>
+          </div>
+
+          <p class="text-xs text-white tracking-wider">【 勇者，我們敘舊時見！】</p>
+        </div>
+
+      </div>
+
+    </div>
+
+    <!-- 底部復古宣告 -->
+    <div class="mt-8 text-center z-10">
+      <p class="text-[9px] text-slate-600 tracking-widest">▲ RETRO 16-BIT CLASS REUNION ENGINE v2.0 ▲</p>
+    </div>
+
+  </div>
+
+  <script>
+    // --- 網頁 8-Bit 音效合成器 (Web Audio API) ---
+    const AudioSynth = {
+      ctx: null,
+      
+      init() {
+        if (!this.ctx) {
+          this.ctx = new (window.AudioContext || window.webkitAudioContext)();
+        }
+      },
+
+      // 基礎像素短音 (Select / Tick)
+      playSelect() {
+        try {
+          this.init();
+          const ctx = this.ctx;
+          const now = ctx.currentTime;
+          const osc = ctx.createOscillator();
+          const gain = ctx.createGain();
+          
+          osc.type = 'triangle'; // 懷舊三角形波
+          osc.frequency.setValueAtTime(300, now);
+          osc.frequency.exponentialRampToValueAtTime(600, now + 0.1);
+          
+          gain.gain.setValueAtTime(0.15, now);
+          gain.gain.exponentialRampToValueAtTime(0.01, now + 0.1);
+          
+          osc.connect(gain);
+          gain.connect(ctx.destination);
+          osc.start(now);
+          osc.stop(now + 0.1);
+        } catch(e) {
+          console.warn("Audio Context blocked or unsupported:", e);
+        }
+      },
+
+      // 錯誤/取消音效
+      playError() {
+        try {
+          this.init();
+          const ctx = this.ctx;
+          const now = ctx.currentTime;
+          const osc = ctx.createOscillator();
+          const gain = ctx.createGain();
+          
+          osc.type = 'sawtooth';
+          osc.frequency.setValueAtTime(150, now);
+          osc.frequency.linearRampToValueAtTime(80, now + 0.25);
+          
+          gain.gain.setValueAtTime(0.2, now);
+          gain.gain.exponentialRampToValueAtTime(0.01, now + 0.25);
+          
+          osc.connect(gain);
+          gain.connect(ctx.destination);
+          osc.start(now);
+          osc.stop(now + 0.25);
+        } catch(e) {
+          console.warn("Audio Context blocked or unsupported:", e);
+        }
+      },
+
+      // 傷害/爆炸打擊感音效
+      playHit() {
+        try {
+          this.init();
+          const ctx = this.ctx;
+          const now = ctx.currentTime;
+          const osc = ctx.createOscillator();
+          const gain = ctx.createGain();
+          
+          osc.type = 'sawtooth';
+          osc.frequency.setValueAtTime(120, now);
+          osc.frequency.exponentialRampToValueAtTime(40, now + 0.15);
+          
+          gain.gain.setValueAtTime(0.25, now);
+          gain.gain.exponentialRampToValueAtTime(0.01, now + 0.15);
+          
+          osc.connect(gain);
+          gain.connect(ctx.destination);
+          osc.start(now);
+          osc.stop(now + 0.15);
+        } catch(e) {
+          console.warn("Audio Context blocked or unsupported:", e);
+        }
+      },
+
+      // 勝利升級琶音 (Victory Arpeggio)
+      playVictory() {
+        try {
+          this.init();
+          const ctx = this.ctx;
+          const now = ctx.currentTime;
+          
+          const notes = [261.63, 329.63, 392.00, 523.25, 659.25, 783.99, 1046.50]; // C大調經典分解和弦
+          notes.forEach((freq, idx) => {
+            const osc = ctx.createOscillator();
+            const gain = ctx.createGain();
+            const start = now + (idx * 0.08);
+            
+            osc.type = 'square'; // 經典方波
+            osc.frequency.setValueAtTime(freq, start);
+            
+            gain.gain.setValueAtTime(0.1, start);
+            gain.gain.exponentialRampToValueAtTime(0.01, start + 0.2);
+            
+            osc.connect(gain);
+            gain.connect(ctx.destination);
+            osc.start(start);
+            osc.stop(start + 0.22);
+          });
+        } catch(e) {
+          console.warn("Audio Context blocked or unsupported:", e);
+        }
+      }
+    };
+
+    // --- State & App Logic ---
+    let attending = null;
+    let isSubmitting = false;
+
+    const defaultConfig = {
+      event_title: '同學會邀請函',
+      event_date: '2026/10/?? 11:00 開始入座',
+      event_location: '迪宅DeeJai Bistro (台北市大同區迪化街一段318號)',
+      invite_message: '好久不見！一起來敘敘舊吧！',
+      background_color: '#121224',
+      card_color: '#090947',
+      accent_color: '#ffe066',
+      text_color: '#e0e0e0',
+      highlight_color: '#e94560',
+      font_family: 'Press Start 2P',
+      font_size: 11
+    };
+
+    // 當使用者輸入玩家名字，即時更新底下狀態欄
+    function updatePartyName(value) {
+      const nameEl = document.getElementById('party-member-name');
+      nameEl.textContent = value.trim() ? value.trim() : '冒險者';
+    }
+
+    // 飄起傷害/治療數字特效
+    function spawnDmgText(text, isPositive = false) {
+      const container = document.getElementById('damage-container');
+      const dmg = document.createElement('div');
+      dmg.className = `absolute text-xs font-black dmg-text pointer-events-none z-30`;
+      dmg.style.color = isPositive ? '#34d399' : '#f87171';
+      dmg.textContent = text;
+      
+      // 隨機定位在表單區域內
+      dmg.style.left = `${Math.random() * 60 + 20}%`;
+      dmg.style.top = `${Math.random() * 40 + 30}%`;
+      
+      container.appendChild(dmg);
+      setTimeout(() => dmg.remove(), 800);
+    }
+
+    function selectAttend(val) {
+      attending = val;
+      const yes = document.getElementById('btn-yes');
+      const no = document.getElementById('btn-no');
+      
+      const hpBar = document.getElementById('hp-bar');
+      const hpText = document.getElementById('hp-text');
+      
+      const partyHp = document.getElementById('party-hp');
+      const partyMp = document.getElementById('party-mp');
+
+      AudioSynth.playSelect();
+
+      if (val === 'yes') {
+        // 接受：HP 補滿，MP 充滿
+        yes.style.outline = '4px solid #ffe066';
+        yes.style.boxShadow = 'none';
+        no.style.outline = 'none';
+        no.style.boxShadow = '3px 3px 0 #000';
+        
+        // 派對狀態動態效果
+        partyHp.textContent = "100";
+        partyHp.className = "text-emerald-400";
+        partyMp.textContent = "99";
+        
+        // Boss 血量動畫
+        hpBar.style.width = "100%";
+        hpText.textContent = "100% / 100%";
+        
+        spawnDmgText("HP FULL! 💖", true);
+      } else {
+        // 拒絕：狀態下滑
+        no.style.outline = '4px solid #ffe066';
+        no.style.boxShadow = 'none';
+        yes.style.outline = 'none';
+        yes.style.boxShadow = '3px 3px 0 #000';
+        
+        partyHp.textContent = "45";
+        partyHp.className = "text-rose-400 font-bold";
+        partyMp.textContent = "10";
+        
+        // Boss 護盾提升(血條看起來沒變)
+        hpBar.style.width = "75%";
+        hpText.textContent = "75% / 100%";
+        
+        spawnDmgText("HP -55! 💢", false);
+      }
+      document.getElementById('submit-btn').disabled = false;
+    }
+
+    async function submitRSVP() {
+      const name = document.getElementById('name-input').value.trim();
+      const msg = document.getElementById('msg-input').value.trim();
+      const errEl = document.getElementById('error-msg');
+
+      if (!name) {
+        AudioSynth.playError();
+        errEl.textContent = '【 系統錯誤 】 請輸入冒險者大名！';
+        errEl.classList.remove('hidden');
+        return;
+      }
+      if (!attending) {
+        AudioSynth.playError();
+        errEl.textContent = '【 系統錯誤 】 請選擇行動模式！';
+        errEl.classList.remove('hidden');
+        return;
+      }
+
+      errEl.classList.add('hidden');
+      if (isSubmitting) return;
+      isSubmitting = true;
+      
+      const btn = document.getElementById('submit-btn');
+      btn.textContent = '傳送計畫中...';
+      btn.disabled = true;
+
+      AudioSynth.playHit();
+
+      // 確保 dataSdk 存在，並發送請求
+      let result = { isOk: false };
+      try {
+        result = await window.dataSdk.create({
+          name,
+          attending,
+          message: msg,
+          submitted_at: new Date().toISOString()
+        });
+      } catch (e) {
+        console.error("Failed to submit through dataSdk:", e);
+      }
+
+      if (result && result.isOk) {
+        AudioSynth.playVictory();
+        document.getElementById('rsvp-form').classList.add('hidden');
+        const sv = document.getElementById('success-view');
+        sv.classList.remove('hidden');
+        document.getElementById('success-text').textContent =
+          attending === 'yes' ? `【 ${name} 】 成功與隊伍會合！大夥們在等你了！` : `【 ${name} 】 雖然無法加入隊伍，但我們的心與你同在！`;
+        
+        // 特效：Boss HP 直接變 0
+        const hpBar = document.getElementById('hp-bar');
+        const hpText = document.getElementById('hp-text');
+        hpBar.style.width = "0%";
+        hpText.textContent = "0% / 100% (VICTORY!)";
+        
+      } else {
+        AudioSynth.playError();
+        errEl.textContent = '【 傳送失敗 】 連線超時，請再度扣關！';
+        errEl.classList.remove('hidden');
+        btn.textContent = '★ 發送作戰計畫 ★';
+        btn.disabled = false;
+      }
+      isSubmitting = false;
+    }
+
+    // Element SDK 整合控制
+    function applyConfig(config) {
+      document.getElementById('title').textContent = config.event_title || defaultConfig.event_title;
+      document.getElementById('subtitle').textContent = config.invite_message || defaultConfig.invite_message;
+      document.getElementById('date-text').textContent = config.event_date || defaultConfig.event_date;
+      document.getElementById('location-text').textContent = config.event_location || defaultConfig.event_location;
+
+      const bg = config.background_color || defaultConfig.background_color;
+      const card = config.card_color || defaultConfig.card_color;
+      const accent = config.accent_color || defaultConfig.accent_color;
+      const text = config.text_color || defaultConfig.text_color;
+      const highlight = config.highlight_color || defaultConfig.highlight_color;
+
+      document.body.style.background = bg;
+      
+      const mainCard = document.getElementById('main-card');
+      const bossWindow = document.getElementById('boss-window');
+      
+      if (mainCard) {
+        mainCard.style.background = card;
+        mainCard.style.borderColor = accent;
+      }
+      
+      if (bossWindow) {
+        bossWindow.style.borderColor = accent;
+      }
+
+      document.getElementById('title').style.color = accent;
+      document.getElementById('subtitle').style.color = highlight;
+      
+      // 更新文字色彩
+      document.querySelectorAll('[style*="color: #e0e0e0"], [style*="color:#e0e0e0"]').forEach(el => {
+        el.style.color = text;
+      });
+
+      const font = config.font_family || defaultConfig.font_family;
+      const size = config.font_size || defaultConfig.font_size;
+      
+      // 自適應套用字體
+      document.querySelectorAll('*').forEach(el => {
+        if(el.tagName !== 'STYLE' && el.tagName !== 'SCRIPT') {
+          el.style.fontFamily = `'${font}', 'DotGothic16', monospace`;
+        }
+      });
+      
+      document.getElementById('title').style.fontSize = `${size * 1.3}px`;
+      document.getElementById('subtitle').style.fontSize = `${size * 0.9}px`;
+    }
+
+    // --- 安全啟動與 SDK 初始化 ---
+    function initializeSDKs() {
+      // 1. 如果 dataSdk 未定義（在某些預覽或獨立環境中），注入健全的模擬 fallback
+      if (!window.dataSdk) {
+        console.warn("dataSdk was undefined. Injecting safe simulation mock.");
+        window.dataSdk = {
+          init({ onDataChanged }) {
+            this.callback = onDataChanged;
+          },
+          async create(data) {
+            console.log("Mock dataSdk saving:", data);
+            return { isOk: true, data };
+          }
+        };
+      }
+
+      // 2. 如果 elementSdk 未定義，注入模擬 fallback 確保預覽仍能正常運作並渲染預設配置
+      if (!window.elementSdk) {
+        console.warn("elementSdk was undefined. Injecting safe simulation mock.");
+        window.elementSdk = {
+          init({ defaultConfig, onConfigChange }) {
+            setTimeout(() => {
+              if (onConfigChange) onConfigChange(defaultConfig);
+            }, 100);
+          },
+          setConfig(config) {
+            console.log("Mock elementSdk.setConfig:", config);
+          }
+        };
+      }
+
+      // 3. 安全執行 Data SDK 初始化
+      try {
+        window.dataSdk.init({ onDataChanged() {} });
+      } catch (e) {
+        console.error("Error initializing dataSdk:", e);
+      }
+
+      // 4. 安全執行 Element SDK 初始化
+      try {
+        window.elementSdk.init({
+          defaultConfig,
+          onConfigChange: async (config) => applyConfig(config),
+          mapToCapabilities: (config) => ({
+            recolorables: [
+              { get: () => config.background_color || defaultConfig.background_color, set: (v) => { config.background_color = v; if (window.elementSdk.setConfig) window.elementSdk.setConfig({ background_color: v }); } },
+              { get: () => config.card_color || defaultConfig.card_color, set: (v) => { config.card_color = v; if (window.elementSdk.setConfig) window.elementSdk.setConfig({ card_color: v }); } },
+              { get: () => config.text_color || defaultConfig.text_color, set: (v) => { config.text_color = v; if (window.elementSdk.setConfig) window.elementSdk.setConfig({ text_color: v }); } },
+              { get: () => config.accent_color || defaultConfig.accent_color, set: (v) => { config.accent_color = v; if (window.elementSdk.setConfig) window.elementSdk.setConfig({ accent_color: v }); } },
+              { get: () => config.highlight_color || defaultConfig.highlight_color, set: (v) => { config.highlight_color = v; if (window.elementSdk.setConfig) window.elementSdk.setConfig({ highlight_color: v }); } }
+            ],
+            borderables: [],
+            fontEditable: { get: () => config.font_family || defaultConfig.font_family, set: (v) => { config.font_family = v; if (window.elementSdk.setConfig) window.elementSdk.setConfig({ font_family: v }); } },
+            fontSizeable: { get: () => config.font_size || defaultConfig.font_size, set: (v) => { config.font_size = v; if (window.elementSdk.setConfig) window.elementSdk.setConfig({ font_size: v }); } }
+          }),
+          mapToEditPanelValues: (config) => new Map([
+            ['event_title', config.event_title || defaultConfig.event_title],
+            ['event_date', config.event_date || defaultConfig.event_date],
+            ['event_location', config.event_location || defaultConfig.event_location],
+            ['invite_message', config.invite_message || defaultConfig.invite_message]
+          ])
+        });
+      } catch (e) {
+        console.error("Error initializing elementSdk:", e);
+      }
+    }
+
+    // 當 DOM 載入完畢後安全啟動
+    window.addEventListener('DOMContentLoaded', () => {
+      initializeSDKs();
+    });
+
+    lucide.createIcons();
+  </script>
+</body>
+</html>
