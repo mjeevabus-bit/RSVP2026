@@ -12,8 +12,8 @@
     html, body {
       height: 100%;
       margin: 0;
-      overflow: hidden;
-      background-color: #0c0714;
+      overflow-x: hidden;
+      background-color: #1a0f0a; /* 溫暖的深木炭色背景 */
     }
 
     /* 結合英文像素字體與日系/中文像素字體 */
@@ -30,6 +30,25 @@
         inset 0 0 0 2px #fff,
         inset 0 0 0 4px #000;
       background: linear-gradient(180deg, #0a1040 0%, #03051e 100%);
+    }
+
+    /* 酒館專用復古木質框 */
+    .tavern-border-wood {
+      border: 4px solid #854d0e;
+      box-shadow: 
+        0 0 0 4px #111,
+        inset 0 0 0 2px #a16207,
+        inset 0 0 0 4px #1a0f0a;
+      background: linear-gradient(180deg, #2e1a0c 0%, #170d06 100%);
+    }
+
+    /* 石磚地鋪效果 */
+    .stone-floor {
+      background-color: #2b1c11;
+      background-image: 
+        linear-gradient(90deg, #1f140c 2px, transparent 2px),
+        linear-gradient(#1f140c 2px, transparent 2px);
+      background-size: 32px 32px;
     }
 
     /* 像素按鈕 */
@@ -60,32 +79,32 @@
     /* 搖晃與漂浮動畫 */
     @keyframes float {
       0%, 100% { transform: translateY(0px); }
-      50% { transform: translateY(-6px); }
+      50% { transform: translateY(-5px); }
     }
     .float-anim {
-      animation: float 3s ease-in-out infinite;
+      animation: float 4s ease-in-out infinite;
     }
 
-    @keyframes pulse-light {
-      0%, 100% { opacity: 0.6; box-shadow: 0 0 8px rgba(234, 179, 8, 0.4); }
-      50% { opacity: 1; box-shadow: 0 0 20px rgba(234, 179, 8, 0.8); }
+    /* 溫暖燭光微弱閃爍 */
+    @keyframes candle-flicker {
+      0%, 100% { opacity: 0.8; filter: drop-shadow(0 0 4px rgba(234, 179, 8, 0.6)); }
+      50% { opacity: 1; filter: drop-shadow(0 0 12px rgba(234, 179, 8, 1)); }
     }
-    .tavern-lantern {
-      animation: pulse-light 2s infinite;
+    .candle-light {
+      animation: candle-flicker 1.5s infinite;
     }
 
-    /* 星星閃爍 */
+    /* 星星/魔法微粒閃爍 */
     @keyframes pixel-blink {
-      0%, 100% { opacity: 0.2; transform: scale(0.8); }
-      50% { opacity: 1; transform: scale(1.2); }
+      0%, 100% { opacity: 0.1; transform: scale(0.8); }
+      50% { opacity: 0.8; transform: scale(1.1); }
     }
-    .pixel-star {
+    .pixel-particle {
       position: absolute;
-      width: 6px;
-      height: 6px;
+      width: 4px;
+      height: 4px;
       background: #ffe066;
-      box-shadow: 0 0 4px #ffe066;
-      animation: pixel-blink 2.5s step-end infinite;
+      animation: pixel-blink 3s step-end infinite;
     }
 
     /* 文字游標閃爍 */
@@ -95,12 +114,54 @@
     }
     .dialog-cursor {
       display: inline-block;
-      width: 12px;
-      height: 12px;
+      width: 10px;
+      height: 10px;
       background-color: #ffe066;
       vertical-align: middle;
       margin-left: 4px;
       animation: cursor-blink 0.8s step-end infinite;
+    }
+
+    /* 飄字好感度特效 */
+    @keyframes favorFloat {
+      0% { opacity: 0; transform: translateY(10px) scale(0.8); }
+      15% { opacity: 1; transform: translateY(0) scale(1.1); }
+      80% { opacity: 1; }
+      100% { opacity: 0; transform: translateY(-40px) scale(1); }
+    }
+    .favor-text {
+      animation: favorFloat 1.2s cubic-bezier(0.18, 0.89, 0.32, 1.28) forwards;
+      text-shadow: 2px 2px 0 #000;
+    }
+
+    /* 對話氣泡效果 */
+    .speech-bubble {
+      position: relative;
+      background: #000;
+      border: 2px solid #fff;
+    }
+    .speech-bubble::after {
+      content: '';
+      position: absolute;
+      bottom: -8px;
+      left: 20px;
+      border-width: 8px 8px 0;
+      border-style: solid;
+      border-color: #000 transparent;
+      display: block;
+      width: 0;
+    }
+    .speech-bubble::before {
+      content: '';
+      position: absolute;
+      bottom: -11px;
+      left: 19px;
+      border-width: 9px 9px 0;
+      border-style: solid;
+      border-color: #fff transparent;
+      display: block;
+      width: 0;
+      z-index: -1;
     }
 
     /* 淡出轉場效果 */
@@ -110,104 +171,200 @@
     @keyframes fadeToBlack {
       to {
         opacity: 0;
-        transform: scale(0.95);
+        transform: scale(0.97);
       }
     }
   </style>
 </head>
-<body class="w-full h-full text-[#e0e0e0] crt relative flex flex-col justify-center items-center p-4 select-none">
+<body class="w-full h-full text-[#e0e0e0] crt relative flex flex-col items-center justify-start overflow-y-auto p-3 md:p-6 select-none">
 
-  <!-- 背景點綴：星空 -->
+  <!-- 背景微弱塵埃微粒 -->
   <div class="absolute inset-0 pointer-events-none overflow-hidden z-0">
-    <div class="pixel-star" style="top:15%; left:10%; animation-delay:0.2s"></div>
-    <div class="pixel-star" style="top:25%; left:80%; animation-delay:0.8s"></div>
-    <div class="pixel-star" style="top:48%; left:5%; animation-delay:1.5s"></div>
-    <div class="pixel-star" style="top:70%; left:88%; animation-delay:0.5s"></div>
-    <div class="pixel-star" style="top:85%; left:20%; animation-delay:1.1s"></div>
+    <div class="pixel-particle" style="top:20%; left:12%; animation-delay:0.2s"></div>
+    <div class="pixel-particle" style="top:35%; left:78%; animation-delay:1s"></div>
+    <div class="pixel-particle" style="top:55%; left:6%; animation-delay:1.8s"></div>
+    <div class="pixel-particle" style="top:75%; left:85%; animation-delay:0.5s"></div>
+    <div class="pixel-particle" style="top:90%; left:25%; animation-delay:1.3s"></div>
   </div>
 
-  <!-- 主容器 -->
-  <div id="portal-app" class="w-full max-w-lg z-10 flex flex-col items-center gap-6">
+  <!-- 頂部標題區 -->
+  <div class="text-center z-10 w-full max-w-5xl mb-4 md:mb-6 mt-2">
+    <div class="inline-block px-4 py-1.5 bg-yellow-950/80 border-2 border-yellow-600 text-[#ffe066] text-[10px] tracking-widest font-bold uppercase mb-2 rounded shadow-lg">
+      🍻 WELCOME TO DEEJAI BISTRO TAVERN 🍻
+    </div>
+    <p class="text-[9px] text-amber-600 uppercase tracking-widest font-bold">點擊任何角落的冒險者，聽聽他們的酒後真言！</p>
+  </div>
 
-    <!-- 酒館招牌與場景 -->
-    <div class="text-center float-anim mb-4">
-      <div class="inline-block px-4 py-1.5 bg-purple-950/80 border-2 border-purple-500 text-purple-300 text-[10px] tracking-widest font-bold uppercase mb-3 rounded">
-        🍺 LOCAL INN & TAVERN 🍺
+  <!-- 主容器 (RWD: 桌機左右雙欄，手機上下單欄) -->
+  <div id="portal-app" class="w-full max-w-5xl z-10 grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch">
+
+    <!-- ==================== 左欄：熱鬧的小酒館內景 (佔 7 欄) ==================== -->
+    <div class="lg:col-span-7 flex flex-col gap-4">
+      <div class="tavern-border-wood p-4 stone-floor relative min-h-[380px] flex flex-col justify-between overflow-hidden shadow-2xl rounded-lg">
+        
+        <!-- 好感度與特效飄字貨架 -->
+        <div id="favor-container" class="absolute inset-0 pointer-events-none overflow-hidden z-30"></div>
+
+        <!-- 背景酒牆與吧台桌 (Tavern Bar Rack) -->
+        <div class="w-full flex justify-between items-start border-b-4 border-amber-950 pb-2">
+          <!-- 左側酒桶與貨架 -->
+          <div class="flex gap-2">
+            <div class="text-2xl filter drop-shadow-[0_2px_0_rgba(0,0,0,1)] select-none">🛢️</div>
+            <div class="text-xl filter drop-shadow-[0_2px_0_rgba(0,0,0,1)] select-none">🍷</div>
+            <div class="text-xl filter drop-shadow-[0_2px_0_rgba(0,0,0,1)] select-none">🍾</div>
+          </div>
+          <!-- 吧台中央：女掌櫃 Abus -->
+          <div class="text-center -mt-1 relative group cursor-pointer" onclick="triggerPatron('keeper')">
+            <!-- 閃爍燭光 -->
+            <div class="absolute -top-3 left-1/2 -translate-x-1/2 text-xs candle-light select-none">🕯️</div>
+            <div class="text-4xl filter drop-shadow-[0_4px_4px_rgba(0,0,0,0.6)] select-none transition-transform group-hover:scale-110">👩‍🦰</div>
+            <div class="mt-1 px-1.5 py-0.5 bg-black/80 border border-[#854d0e] rounded text-[8px] text-amber-400 font-bold tracking-wider">
+              女掌櫃 Abus
+            </div>
+          </div>
+          <!-- 右側酒桶 -->
+          <div class="flex gap-2">
+            <div class="text-xl filter drop-shadow-[0_2px_0_rgba(0,0,0,1)] select-none">🍾</div>
+            <div class="text-xl filter drop-shadow-[0_2px_0_rgba(0,0,0,1)] select-none">🍷</div>
+            <div class="text-2xl filter drop-shadow-[0_2px_0_rgba(0,0,0,1)] select-none">🛢️</div>
+          </div>
+        </div>
+
+        <!-- 酒館中央動態事件與桌椅配置 -->
+        <div class="grid grid-cols-2 gap-4 my-4 relative z-10">
+          
+          <!-- 一號桌：熱鬧的紙牌賭局 (Card Gaming Table) -->
+          <div class="bg-amber-950/40 border border-amber-800/40 p-2.5 rounded relative cursor-pointer hover:bg-amber-950/60 transition-colors group" onclick="triggerPatron('cards')">
+            <div class="absolute -top-2 -right-2 text-[10px] bg-red-950 border border-red-500 text-red-400 px-1 rounded scale-90">LIVE!</div>
+            <div class="text-[9px] text-amber-200 mb-1 border-b border-dashed border-amber-800 pb-1">🃏 勇者對決牌局</div>
+            
+            <div class="flex justify-around items-center my-2">
+              <span class="text-2xl filter drop-shadow-[0_2px_2px_rgba(0,0,0,0.5)] group-hover:-translate-y-1 transition-transform">👹</span>
+              <span class="text-lg select-none">🃏</span>
+              <span class="text-2xl filter drop-shadow-[0_2px_2px_rgba(0,0,0,0.5)] group-hover:-translate-y-1 transition-transform" style="animation-delay: 0.2s">🧝</span>
+            </div>
+            <p class="text-[8px] text-slate-400 text-center">半獸人 vs 高級精靈</p>
+          </div>
+
+          <!-- 二號桌：吟遊詩人與熱舞派對 (Bard & Music Corner) -->
+          <div class="bg-amber-950/40 border border-amber-800/40 p-2.5 rounded relative cursor-pointer hover:bg-amber-950/60 transition-colors group" onclick="triggerPatron('music')">
+            <div class="absolute -top-2 -right-2 text-[10px] bg-emerald-950 border border-emerald-500 text-emerald-400 px-1 rounded scale-90">MUSIC</div>
+            <div class="text-[9px] text-amber-200 mb-1 border-b border-dashed border-amber-800 pb-1">🎸 皇家現場演奏</div>
+            
+            <div class="flex justify-around items-center my-2">
+              <span class="text-2xl filter drop-shadow-[0_2px_2px_rgba(0,0,0,0.5)] group-hover:rotate-12 transition-transform">🧑‍🎤</span>
+              <span class="text-xl select-none animate-bounce">🎶</span>
+              <span class="text-2xl filter drop-shadow-[0_2px_2px_rgba(0,0,0,0.5)] group-hover:-rotate-12 transition-transform">🍻</span>
+            </div>
+            <p class="text-[8px] text-slate-400 text-center">吟遊詩人與嗨啤群眾</p>
+          </div>
+
+          <!-- 三號桌：角落神祕的作戰會議 (Secret Planning Corner) -->
+          <div class="bg-amber-950/40 border border-amber-800/40 p-2.5 rounded relative cursor-pointer hover:bg-amber-950/60 transition-colors group" onclick="triggerPatron('raid')">
+            <div class="absolute -top-2 -right-2 text-[10px] bg-purple-950 border border-purple-500 text-purple-400 px-1 rounded scale-90">PLANS</div>
+            <div class="text-[9px] text-amber-200 mb-1 border-b border-dashed border-amber-800 pb-1">🛡️ 突襲副本計畫</div>
+            
+            <div class="flex justify-around items-center my-2">
+              <span class="text-2xl filter drop-shadow-[0_2px_2px_rgba(0,0,0,0.5)] group-hover:scale-110 transition-transform">🧛</span>
+              <span class="text-lg select-none">🗺️</span>
+              <span class="text-2xl filter drop-shadow-[0_2px_2px_rgba(0,0,0,0.5)] group-hover:scale-110 transition-transform">👿</span>
+            </div>
+            <p class="text-[8px] text-slate-400 text-center">吸血鬼與密謀惡魔</p>
+          </div>
+
+          <!-- 四號桌：孤單的魔法學者 (Lonely Wizard Study) -->
+          <div class="bg-amber-950/40 border border-amber-800/40 p-2.5 rounded relative cursor-pointer hover:bg-amber-950/60 transition-colors group" onclick="triggerPatron('magic')">
+            <div class="absolute -top-2 -right-2 text-[10px] bg-blue-950 border border-blue-500 text-blue-400 px-1 rounded scale-90">STUDY</div>
+            <div class="text-[9px] text-amber-200 mb-1 border-b border-dashed border-amber-800 pb-1">🔮 賢者魔法研究</div>
+            
+            <div class="flex justify-around items-center my-2">
+              <span class="text-2xl filter drop-shadow-[0_2px_2px_rgba(0,0,0,0.5)] group-hover:scale-110 transition-transform">🧙</span>
+              <span class="text-lg select-none">📖</span>
+              <span class="text-xl filter drop-shadow-[0_2px_2px_rgba(0,0,0,0.5)] candle-light">🔮</span>
+            </div>
+            <p class="text-[8px] text-slate-400 text-center">古老法術譯碼大師</p>
+          </div>
+
+        </div>
+
+        <!-- 酒館動態即時對話泡泡 (Floating Speech Bubble) -->
+        <div id="patron-bubble" class="speech-bubble p-2 rounded text-[10px] text-[#ffe066] max-w-xs mx-auto text-center hidden mb-2 transition-all duration-300">
+          「聽說今年同學會有免費啤酒暢飲？真的假的！」
+        </div>
+
+        <!-- 底部大門裝飾 -->
+        <div class="flex justify-between items-center border-t-4 border-amber-950 pt-2 mt-auto text-[8px] text-amber-700 font-bold">
+          <span>🚪 ENTRANCE PORTAL</span>
+          <span>● DEEJAI COZY BAR ●</span>
+          <span>BARRELS OF ALE 🚪</span>
+        </div>
+
       </div>
-      
-      <!-- 迪宅酒館招牌 -->
-      <div class="jrpg-dialog p-4 border-[#854d0e] bg-amber-950/90 relative max-w-[340px] mx-auto rounded-md shadow-2xl">
-        <div class="absolute -top-3 left-1/2 -translate-x-1/2 bg-yellow-500 tavern-lantern w-3 h-3 rounded-full"></div>
-        <h1 class="text-sm md:text-base font-extrabold text-[#ffe066] tracking-wider drop-shadow-[0_2px_0_rgba(0,0,0,1)]">
-          迪宅 DEEJAI BISTRO
-        </h1>
-        <div class="mt-1.5 border-t border-dashed border-amber-800/60 pt-1 flex justify-center gap-4 text-[9px] text-amber-200">
-          <span>EST. 2026</span>
-          <span>●</span>
-          <span>GUILD HQ</span>
+    </div>
+
+    <!-- ==================== 右欄：JRPG 對話系統與指令選單 (佔 5 欄) ==================== -->
+    <div class="lg:col-span-5 flex flex-col gap-4">
+
+      <!-- JRPG 經典對話框 -->
+      <div class="w-full jrpg-dialog p-4 md:p-5 relative min-h-[160px] flex flex-col justify-between">
+        
+        <!-- 說話者名字標籤 -->
+        <div class="absolute -top-3.5 left-4 bg-[#0a1040] border-2 border-white px-3 py-0.5 text-[10px] text-[#ffe066] font-bold tracking-widest uppercase">
+          說話者：<span id="speaker-name">女掌櫃 Abus</span>
+        </div>
+
+        <!-- 對話文字內容 -->
+        <div class="text-xs md:text-sm leading-relaxed text-white pr-2 mt-2" id="dialog-text">
+          <!-- 這裡會由 JS 打字機動態填入 -->
+        </div>
+
+        <!-- 下一步小三角形指示器 -->
+        <div class="text-right h-4 select-none">
+          <span class="inline-block text-[#ffe066] animate-bounce text-[10px] mr-1" id="next-indicator" style="display:none;">▼</span>
         </div>
       </div>
-    </div>
 
-    <!-- 門口NPC (掌櫃) -->
-    <div class="relative flex items-center justify-center my-2 h-24">
-      <!-- 傳送門或溫暖黃光 -->
-      <div class="absolute w-28 h-28 bg-yellow-600/20 rounded-full blur-xl animate-pulse"></div>
-      
-      <!-- 掌櫃 NPC Emoji/像素拼貼 -->
-      <div class="relative z-10 flex flex-col items-center">
-        <div class="text-5xl select-none filter drop-shadow-[0_4px_4px_rgba(0,0,0,0.5)]">🧔</div>
-        <div class="mt-2 px-2 py-0.5 bg-black/80 border border-slate-600 rounded text-[9px] text-slate-400 font-bold tracking-widest">
-          酒館掌櫃 (NPC)
-        </div>
-      </div>
-    </div>
+      <!-- 勇者指令選單 (行動方案) -->
+      <div class="w-full space-y-3" id="choices-container" style="visibility: hidden;">
+        
+        <!-- 核心進入按鈕 -->
+        <button onclick="handleChoice('enter')" class="pixel-btn w-full p-4 text-left text-xs bg-emerald-950 hover:bg-emerald-900 text-emerald-400 border-emerald-500 rounded flex items-center justify-between group transition-all">
+          <span class="flex items-center gap-2">
+            <span class="text-amber-400 group-hover:translate-x-1 transition-transform">▶</span>
+            遞上「同學會邀請函」(進入 RSVP)
+          </span>
+          <span class="text-[9px] text-emerald-500 uppercase tracking-widest">[ QUEST START ]</span>
+        </button>
 
-    <!-- JRPG 經典對話框 -->
-    <div class="w-full jrpg-dialog p-4 md:p-5 relative min-h-[140px] flex flex-col justify-between">
-      
-      <!-- 說話者名字標籤 -->
-      <div class="absolute -top-3.5 left-4 bg-[#0a1040] border-2 border-white px-3 py-0.5 text-[10px] text-[#ffe066] font-bold tracking-widest uppercase">
-        掌櫃 迪宅
-      </div>
-
-      <!-- 對話文字內容 -->
-      <div class="text-xs md:text-sm leading-relaxed text-white pr-2 mt-2" id="dialog-text">
-        <!-- 這裡會由 JS 打字機動態填入 -->
-      </div>
-
-      <!-- 下一步小三角形指示器 -->
-      <div class="text-right h-4 select-none">
-        <span class="inline-block text-[#ffe066] animate-bounce text-[10px] mr-1" id="next-indicator" style="display:none;">▼</span>
-      </div>
-    </div>
-
-    <!-- 勇者指令選單 (行動方案) -->
-    <div class="w-full space-y-3" id="choices-container" style="visibility: hidden;">
-      <button onclick="handleChoice('enter')" class="pixel-btn w-full p-3.5 text-left text-xs bg-emerald-950 hover:bg-emerald-900 text-emerald-400 border-emerald-500 rounded flex items-center justify-between group transition-all">
-        <span class="flex items-center gap-2">
+        <!-- 打聽情報按鈕 -->
+        <button onclick="handleChoice('info')" class="pixel-btn w-full p-4 text-left text-xs bg-slate-900 hover:bg-slate-800 text-slate-300 border-slate-600 rounded flex items-center gap-2 group transition-all">
           <span class="text-amber-400 group-hover:translate-x-1 transition-transform">▶</span>
-          遞上「同學會邀請函」(進入 RSVP)
-        </span>
-        <span class="text-[9px] text-emerald-600 uppercase tracking-widest">[ LEVEL 99 QUEST ]</span>
-      </button>
+          打聽關於這個「酒館任務」的細節
+        </button>
 
-      <button onclick="handleChoice('info')" class="pixel-btn w-full p-3.5 text-left text-xs bg-slate-900 hover:bg-slate-800 text-slate-300 border-slate-600 rounded flex items-center gap-2 group transition-all">
-        <span class="text-amber-400 group-hover:translate-x-1 transition-transform">▶</span>
-        打聽關於這個「酒館任務」的細節
-      </button>
+        <!-- 【超高互動性全新按鈕】：請喝一杯解鎖八卦 -->
+        <button onclick="handleChoice('drink')" class="pixel-btn w-full p-4 text-left text-xs bg-amber-950 hover:bg-amber-900 text-[#ffe066] border-amber-600 rounded flex items-center justify-between group transition-all">
+          <span class="flex items-center gap-2">
+            <span class="text-amber-400 group-hover:translate-x-1 transition-transform">▶</span>
+            🍺 請 Abus 喝一杯特調黑麥汁
+          </span>
+          <span class="text-[9px] text-yellow-500 uppercase tracking-widest animate-pulse">[ FAVOR + ]</span>
+        </button>
 
-      <button onclick="handleChoice('leave')" class="pixel-btn w-full p-3.5 text-left text-xs bg-rose-950 hover:bg-rose-900 text-rose-400 border-rose-800 rounded flex items-center gap-2 group transition-all">
-        <span class="text-amber-400 group-hover:translate-x-1 transition-transform">▶</span>
-        沒事，只是路過看看 (隨便逛逛)
-      </button>
+        <!-- 離開按鈕 -->
+        <button onclick="handleChoice('leave')" class="pixel-btn w-full p-4 text-left text-xs bg-rose-950 hover:bg-rose-900 text-rose-400 border-rose-800 rounded flex items-center gap-2 group transition-all">
+          <span class="text-amber-400 group-hover:translate-x-1 transition-transform">▶</span>
+          沒事，只是路過看看 (隨便逛逛)
+        </button>
+      </div>
+
     </div>
 
   </div>
 
   <!-- 底部版權宣示 -->
-  <div class="mt-8 text-center z-10 text-[9px] text-slate-600 tracking-widest">
-    ▲ CLICK TO HEAR THE retro 8-BIT TAVERN SOUNDS ▲
+  <div class="mt-8 mb-4 text-center z-10 text-[9px] text-slate-600 tracking-widest">
+    ▲ CLICK THE SCREEN OR PATRONS TO ACTIVATE 8-BIT TAVERN SOUNDS ▲
   </div>
 
   <script>
@@ -230,7 +387,7 @@
           const gain = this.ctx.createGain();
 
           osc.type = 'triangle';
-          osc.frequency.setValueAtTime(450 + Math.random() * 80, now); // 微幅音高抖動，聽起來更像 NPC 人聲
+          osc.frequency.setValueAtTime(450 + Math.random() * 80, now);
 
           gain.gain.setValueAtTime(0.04, now);
           gain.gain.exponentialRampToValueAtTime(0.01, now + 0.05);
@@ -239,9 +396,7 @@
           gain.connect(this.ctx.destination);
           osc.start(now);
           osc.stop(now + 0.06);
-        } catch (e) {
-          // 靜音 fallback
-        }
+        } catch (e) {}
       },
 
       // 游標選單點擊音
@@ -263,6 +418,28 @@
           gain.connect(this.ctx.destination);
           osc.start(now);
           osc.stop(now + 0.14);
+        } catch (e) {}
+      },
+
+      // 金幣獲得聲 / 獲得好感度
+      playCoin() {
+        try {
+          this.init();
+          const now = this.ctx.currentTime;
+          const osc = this.ctx.createOscillator();
+          const gain = this.ctx.createGain();
+
+          osc.type = 'square';
+          osc.frequency.setValueAtTime(987.77, now); // B5 note
+          osc.frequency.setValueAtTime(1318.51, now + 0.08); // E6 note
+
+          gain.gain.setValueAtTime(0.07, now);
+          gain.gain.exponentialRampToValueAtTime(0.005, now + 0.35);
+
+          osc.connect(gain);
+          gain.connect(this.ctx.destination);
+          osc.start(now);
+          osc.stop(now + 0.35);
         } catch (e) {}
       },
 
@@ -293,9 +470,7 @@
         try {
           this.init();
           const now = this.ctx.currentTime;
-          const duration = 0.6;
           
-          // 琶音和弦升天音效 (傳送門開啟)
           const notes = [261.6, 329.6, 392.0, 523.3, 659.3, 784.0, 1046.5];
           notes.forEach((freq, idx) => {
             const osc = this.ctx.createOscillator();
@@ -315,26 +490,103 @@
             osc.stop(startTime + 0.3);
           });
         } catch (e) {}
+      },
+
+      // 乾杯音效
+      playCheers() {
+        try {
+          this.init();
+          const now = this.ctx.currentTime;
+          const osc1 = this.ctx.createOscillator();
+          const osc2 = this.ctx.createOscillator();
+          const gain = this.ctx.createGain();
+
+          osc1.type = 'sine';
+          osc1.frequency.setValueAtTime(880, now);
+          osc1.frequency.linearRampToValueAtTime(660, now + 0.1);
+
+          osc2.type = 'triangle';
+          osc2.frequency.setValueAtTime(1200, now);
+          osc2.frequency.linearRampToValueAtTime(800, now + 0.1);
+
+          gain.gain.setValueAtTime(0.1, now);
+          gain.gain.exponentialRampToValueAtTime(0.01, now + 0.15);
+
+          osc1.connect(gain);
+          osc2.connect(gain);
+          gain.connect(this.ctx.destination);
+
+          osc1.start(now);
+          osc1.stop(now + 0.15);
+          osc2.start(now);
+          osc2.stop(now + 0.15);
+        } catch (e) {}
+      },
+
+      // 魯特琴彈奏音效
+      playLute() {
+        try {
+          this.init();
+          const now = this.ctx.currentTime;
+          const notes = [293.66, 349.23, 440.00, 587.33]; // Dm 經典和弦
+          notes.forEach((freq, idx) => {
+            const osc = this.ctx.createOscillator();
+            const gain = this.ctx.createGain();
+            const start = now + (idx * 0.05);
+
+            osc.type = 'triangle';
+            osc.frequency.setValueAtTime(freq, start);
+
+            gain.gain.setValueAtTime(0.06, start);
+            gain.gain.exponentialRampToValueAtTime(0.01, start + 0.25);
+
+            osc.connect(gain);
+            gain.connect(this.ctx.destination);
+            osc.start(start);
+            osc.stop(start + 0.25);
+          });
+        } catch (e) {}
       }
     };
 
-    // --- JRPG 打字機核心邏輯 ---
+    // --- JRPG 劇本與隨機八卦設定 ---
     const script = {
-      welcome: "「歡迎光臨迪宅酒館！這裡聚集了各路頂尖的冒險者與勇士... 嗯？我看你骨骼清奇，身上有一封泛著金色微光的『同學會邀請函』？難道，你就是預言中的老同學嗎？」",
-      aboutQuest: "「哦！你問這個任務？這可是時隔多年的傳奇限定戰役！據說，我們將在『2026/10/?? 11:00』於『迪宅DeeJai Bistro』這個神秘地城會合，共同討伐名為『同學會』的史詩級副本！聽說現場還備有美味佳釀與豐富冒險經費（AA分攤）呢！」",
-      leaveWarning: "「哎呀，別走啊！外面夜深怪多，不如進來喝一杯，遞上你的作戰計畫書，與當年的夥伴們一起重組工會吧！」"
+      welcome: "「歡迎光臨迪宅酒館！我是這裡的掌櫃 Abus。這裡聚集了各路頂尖的冒險者... 嗯？你身上有一封泛著金色微光的『同學會邀請函』？天啊，你就是大家在等的那位老勇者嗎？」",
+      aboutQuest: "「這可是時隔多年的史詩限定戰役！據說，我們將在『2026/10/?? 11:00』於『迪宅DeeJai Bistro』會合，共同討伐名為『同學會』的史詩級副本！快填寫你的 RSVP 作戰書吧，大家都在等著你呢！」",
+      leaveWarning: "「哎呀，別走啊！外面夜深怪多，不如進來喝一杯，跟老夥伴們重組工會吧！」",
+      
+      // 隨機酒館傳聞秘密 (當勇者請 Abus 喝一杯時)
+      rumors: [
+        "「（咕嚕咕嚕...哈啊！）真是杯好酒！偷偷告訴你一個秘密，聽說當年坐我們最後一排常被老師罰站的那個人，現在已經成為大企業主管了喔！」",
+        "「（擦拭酒杯）好喝！透露你一個情報，據占星術推算，這次同學會聚餐好像有人準備了超驚豔的隱藏大禮唷！」",
+        "「哎呀～真大方！看在你的誠意份上，我聽說這次聚會點『迪宅Bistro』的地牢深處，老闆好像特別準備了非常厲害的私房開胃菜喔！」",
+        "「謝啦勇者！悄悄告訴你，聽說這次有幾位十幾年沒出現過、只存在於傳說中的神祕大咖級同學，這次也決定要驚喜現身了！」"
+      ],
+
+      // 點擊酒館內 NPC 的彩蛋對話
+      patrons: {
+        keeper: { name: "女掌櫃 Abus", msg: "「想要打聽任務情報？請我喝杯黑麥汁，或者在右側遞上你的作戰計畫書，我就帶你進入大廳！」" },
+        cards: { name: "牌王 半獸人", msg: "「別吵！這局我的勝率有 99%！贏了我就能包下十月份同學會的所有酒錢！」" },
+        music: { name: "吟遊詩人 傑克", msg: "「拉拉拉～🎵 手中酒杯舉起來！2026 年的相聚，一首傳奇史詩即將拉開序幕！乾杯！」" },
+        raid: { name: "刺客 德古拉", msg: "「哼... 據傳 2026/10 迪化街地城將會開啟，我得先調查好迪宅Bistro的防禦薄弱處...（筆記）」" },
+        magic: { name: "賢者 甘道夫", msg: "「我正在用占星術推算『2026/10/??』這個神祕問號背後的精確天象... 看來是個適合狂歡的吉日！」" }
+      }
     };
 
     let typingTimer = null;
     let isTyping = false;
+    let currentRumorIndex = 0;
 
-    function typeMessage(text, callback) {
+    function typeMessage(speaker, text, callback) {
       clearInterval(typingTimer);
       isTyping = true;
+      
+      const speakerEl = document.getElementById('speaker-name');
       const displayEl = document.getElementById('dialog-text');
       const nextIndicator = document.getElementById('next-indicator');
       const choicesContainer = document.getElementById('choices-container');
       
+      speakerEl.textContent = speaker;
       displayEl.innerHTML = "";
       nextIndicator.style.display = "none";
       choicesContainer.style.visibility = "hidden";
@@ -359,7 +611,50 @@
           choicesContainer.style.visibility = "visible";
           if (callback) callback();
         }
-      }, 45); // 順暢舒適的打字速度
+      }, 40); // 順暢舒適的打字速度
+    }
+
+    // --- 漂浮好感度特效特效 ---
+    function spawnFavorEffect() {
+      const container = document.getElementById('favor-container');
+      const text = document.createElement('div');
+      text.className = `absolute text-xs font-black favor-text pointer-events-none z-30 flex items-center gap-1`;
+      text.style.color = '#f43f5e'; // 浪漫粉紅色
+      text.innerHTML = `❤️ 好感度 +999 ❤️`;
+      
+      // 定位在吧台女掌櫃 Abus 的上方
+      text.style.left = '45%';
+      text.style.top = '10%';
+      
+      container.appendChild(text);
+      setTimeout(() => text.remove(), 1200);
+    }
+
+    // --- 點擊酒館 NPC 事件處理 ---
+    function triggerPatron(id) {
+      const p = script.patrons[id];
+      if (!p) return;
+
+      // 播放專屬音效
+      if (id === 'music') {
+        AudioEngine.playLute();
+      } else if (id === 'cards' || id === 'raid') {
+        AudioEngine.playSelect();
+      } else {
+        AudioEngine.playCheers();
+      }
+
+      // 對話框大打字
+      typeMessage(p.name, p.msg);
+
+      // 顯示地圖上的動態對話小氣泡
+      const bubble = document.getElementById('patron-bubble');
+      bubble.textContent = `【${p.name}】: ${p.msg.substring(1, 25)}...`;
+      bubble.classList.remove('hidden');
+      
+      setTimeout(() => {
+        bubble.classList.add('hidden');
+      }, 4000);
     }
 
     // --- 勇者指令點擊回饋處理 ---
@@ -380,11 +675,27 @@
 
       } else if (action === 'info') {
         AudioEngine.playSelect();
-        typeMessage(script.aboutQuest);
+        typeMessage("女掌櫃 Abus", script.aboutQuest);
+
+      } else if (action === 'drink') {
+        // 播放驚喜金幣音效與乾杯音效
+        AudioEngine.playCoin();
+        setTimeout(() => {
+          AudioEngine.playCheers();
+        }, 150);
+
+        // 觸發漂浮好感度特效
+        spawnFavorEffect();
+
+        // 隨機切換傳聞八卦並印出對話
+        const rumorText = script.rumors[currentRumorIndex];
+        currentRumorIndex = (currentRumorIndex + 1) % script.rumors.length;
+
+        typeMessage("女掌櫃 Abus", rumorText);
 
       } else if (action === 'leave') {
         AudioEngine.playSigh();
-        typeMessage(script.leaveWarning);
+        typeMessage("女掌櫃 Abus", script.leaveWarning);
       }
     }
 
@@ -395,9 +706,8 @@
 
     // 初始化開始打字
     window.addEventListener('DOMContentLoaded', () => {
-      // 確保一開始就觸發掌櫃講話
       setTimeout(() => {
-        typeMessage(script.welcome);
+        typeMessage("女掌櫃 Abus", script.welcome);
       }, 500);
     });
   </script>
