@@ -1,715 +1,1788 @@
-<!doctype html>
-<html class="h-full">
+<!DOCTYPE html>
+<html lang="zh-TW">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>DeeJai Bistro - Tavern Entrance</title>
-  <script src="https://cdn.tailwindcss.com/3.4.17"></script>
-  <script src="https://cdn.jsdelivr.net/npm/lucide@0.263.0/dist/umd/lucide.min.js"></script>
+  <title>DeeJai Bistro ★ RPG 同學會邀請函</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
   <style>
-    @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&family=DotGothic16&display=swap');
-
+    :root {
+      --bg: #5abbed;
+      --panel-bg: #0f172a;
+      --gold: #facc15;
+      --gold-dark: #a16207;
+      --cyan: #38bdf8;
+      --red: #ef4444;
+      --green: #22c55e;
+      --purple: #a855f7;
+      --white: #f8fafc;
+      --dim: #94a3b8;
+      --border: 4px solid var(--gold);
+      --shadow-gold: 0 0 0 2px #000, 0 0 0 4px var(--gold-dark), 4px 4px 0 #000;
+      --shadow-cyan: 0 0 0 2px #000, 0 0 0 4px #0284c7, 4px 4px 0 #000;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     html, body {
       height: 100%;
-      margin: 0;
+      background: var(--bg);
+      color: var(--white);
+      font-family: 'Press Start 2P', monospace;
+      font-size: 10px;
+      line-height: 1.6;
       overflow-x: hidden;
-      background-color: #1a0f0a; /* 溫暖的深木炭色背景 */
-    }
-
-    /* 結合英文像素字體與日系/中文像素字體 */
-    * {
-      font-family: 'Press Start 2P', 'DotGothic16', monospace;
       image-rendering: pixelated;
+      cursor: default;
+    }
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: #0284c7; }
+    ::-webkit-scrollbar-thumb { background: var(--gold); border: 1px solid #000; }
+
+    /* ── TITLE SCREEN ── */
+    #title-screen {
+      position: fixed; inset: 0; z-index: 10000;
+      background: #000;
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      gap: 0;
+    }
+    #title-screen.hidden { display: none; }
+    #title-canvas { image-rendering: pixelated; }
+    .title-logo {
+      font-size: clamp(12px, 3vw, 22px);
+      color: var(--gold);
+      text-shadow: 3px 3px 0 #000, 0 0 20px rgba(250,204,21,0.6);
+      letter-spacing: 4px;
+      text-align: center;
+      line-height: 2;
+      margin-top: 16px;
+    }
+    .title-sub {
+      font-size: clamp(7px, 1.5vw, 9px);
+      color: var(--cyan);
+      margin-top: 8px;
+      letter-spacing: 2px;
+    }
+    .press-start {
+      font-size: clamp(8px, 2vw, 11px);
+      color: var(--white);
+      margin-top: 32px;
+      animation: blink 0.9s step-end infinite;
+      letter-spacing: 2px;
+    }
+    .title-version {
+      position: absolute; bottom: 12px; right: 16px;
+      font-size: 7px; color: #333; letter-spacing: 1px;
+    }
+    .title-hint {
+      position: absolute; bottom: 12px; left: 16px;
+      font-size: 7px; color: #222; letter-spacing: 1px;
+    }
+    #title-copyright {
+      position: absolute; bottom: 28px;
+      font-size: 7px; color: #444; letter-spacing: 1px;
     }
 
-    /* 經典 JRPG 藍底白邊對話框 */
-    .jrpg-dialog {
-      border: 4px solid #fff;
-      box-shadow: 
-        0 0 0 4px #111,
-        inset 0 0 0 2px #fff,
-        inset 0 0 0 4px #000;
-      background: linear-gradient(180deg, #0a1040 0%, #03051e 100%);
+    /* ── ANIMATED BG ── */
+    #bg-canvas { position: fixed; inset: 0; z-index: 0; pointer-events: none; }
+    body::after {
+      content: '';
+      position: fixed; inset: 0; z-index: 999; pointer-events: none;
+      background:
+        repeating-linear-gradient(0deg, transparent, transparent 3px, rgba(0,0,0,0.04) 3px, rgba(0,0,0,0.04) 4px),
+        linear-gradient(90deg, rgba(255,0,0,0.01), rgba(0,255,0,0.01), rgba(0,0,255,0.01));
     }
 
-    /* 酒館專用復古木質框 */
-    .tavern-border-wood {
-      border: 4px solid #854d0e;
-      box-shadow: 
-        0 0 0 4px #111,
-        inset 0 0 0 2px #a16207,
-        inset 0 0 0 4px #1a0f0a;
-      background: linear-gradient(180deg, #2e1a0c 0%, #170d06 100%);
+    /* ── LAYOUT ── */
+    #app {
+      position: relative; z-index: 10;
+      min-height: 100vh;
+      display: flex; flex-direction: column; align-items: center;
+      padding: 16px 12px 40px;
     }
 
-    /* 石磚地鋪效果 */
-    .stone-floor {
-      background-color: #2b1c11;
-      background-image: 
-        linear-gradient(90deg, #1f140c 2px, transparent 2px),
-        linear-gradient(#1f140c 2px, transparent 2px);
-      background-size: 32px 32px;
-    }
-
-    /* 像素按鈕 */
-    .pixel-btn {
+    /* ── RPG PANELS ── */
+    .panel {
+      background: var(--panel-bg);
+      border: 3px solid var(--gold-dark);
+      box-shadow: var(--shadow-gold);
       position: relative;
-      border: 3px solid #fff;
-      box-shadow: 3px 3px 0 #000;
-      transition: all 0.05s ease;
     }
-    .pixel-btn:active {
-      transform: translate(3px, 3px);
-      box-shadow: 0px 0px 0 #000;
+    .panel-gold {
+      background: linear-gradient(180deg, #1e293b 0%, #0f172a 100%);
+      border: 3px solid var(--gold);
+      box-shadow: 0 0 0 2px #000, 0 0 0 4px #854d0e, 4px 4px 0 #000,
+                  inset 0 0 40px rgba(250,204,21,0.05);
     }
-
-    /* CRT 電視掃描線效果 */
-    .crt::after {
-      content: " ";
-      display: block;
-      position: absolute;
-      top: 0; left: 0; bottom: 0; right: 0;
-      background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06));
-      aspect-ratio: auto;
-      background-size: 100% 4px, 6px 100%;
-      pointer-events: none;
-      z-index: 99;
+    .panel-cyan { border: 3px solid var(--cyan); box-shadow: var(--shadow-cyan); }
+    .panel-label {
+      position: absolute; top: -11px; left: 10px;
+      background: #1e293b; border: 2px solid var(--gold-dark);
+      padding: 2px 8px; font-size: 8px; color: var(--gold);
+      letter-spacing: 2px; text-transform: uppercase; white-space: nowrap; z-index: 5;
     }
 
-    /* 搖晃與漂浮動畫 */
-    @keyframes float {
-      0%, 100% { transform: translateY(0px); }
-      50% { transform: translateY(-5px); }
+    /* ── BUTTONS ── */
+    .btn {
+      display: inline-flex; align-items: center; justify-content: center;
+      gap: 6px; padding: 10px 16px;
+      font-family: 'Press Start 2P', monospace; font-size: 9px;
+      cursor: pointer; border: 3px solid; position: relative;
+      transition: transform 0.05s, box-shadow 0.05s;
+      text-decoration: none; user-select: none; letter-spacing: 1px;
     }
-    .float-anim {
-      animation: float 4s ease-in-out infinite;
-    }
+    .btn::after { content: ''; position: absolute; inset: 1px; border: 1px solid rgba(255,255,255,0.12); pointer-events: none; }
+    .btn:active { transform: translate(3px, 3px); box-shadow: none !important; }
+    .btn:focus { outline: none; }
+    .btn-gold { background: var(--gold); color: #000; border-color: #fff; box-shadow: 3px 3px 0 #000, 5px 5px 0 var(--gold-dark); }
+    .btn-gold:hover { background: #fef08a; }
+    .btn-green { background: #14532d; color: var(--green); border-color: var(--green); box-shadow: 3px 3px 0 #000; }
+    .btn-green:hover { background: #166534; }
+    .btn-red { background: #7f1d1d; color: var(--red); border-color: var(--red); box-shadow: 3px 3px 0 #000; }
+    .btn-red:hover { background: #991b1b; }
+    .btn-dark { background: #1e293b; color: var(--white); border-color: #334155; box-shadow: 3px 3px 0 #000; }
+    .btn-dark:hover { background: #334155; }
+    .btn-purple { background: #4c1d95; color: #e9d5ff; border-color: var(--purple); box-shadow: 3px 3px 0 #000; }
+    .btn-purple:hover { background: #5b21b6; }
 
-    /* 溫暖燭光微弱閃爍 */
-    @keyframes candle-flicker {
-      0%, 100% { opacity: 0.8; filter: drop-shadow(0 0 4px rgba(234, 179, 8, 0.6)); }
-      50% { opacity: 1; filter: drop-shadow(0 0 12px rgba(234, 179, 8, 1)); }
-    }
-    .candle-light {
-      animation: candle-flicker 1.5s infinite;
-    }
+    /* ── SCREENS ── */
+    .screen { display: none; width: 100%; max-width: 900px; animation: fadeIn 0.3s ease; }
+    .screen.active { display: block; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
 
-    /* 星星/魔法微粒閃爍 */
-    @keyframes pixel-blink {
-      0%, 100% { opacity: 0.1; transform: scale(0.8); }
-      50% { opacity: 0.8; transform: scale(1.1); }
+    /* ── TRANSITION ── */
+    #transition-overlay {
+      position: fixed; inset: 0; z-index: 9000; background: #000;
+      display: flex; align-items: center; justify-content: center; flex-direction: column; gap: 16px;
+      pointer-events: none; opacity: 0; transition: opacity 0.25s;
     }
-    .pixel-particle {
-      position: absolute;
-      width: 4px;
-      height: 4px;
-      background: #ffe066;
-      animation: pixel-blink 3s step-end infinite;
-    }
+    #transition-overlay.active { opacity: 1; pointer-events: all; }
+    #transition-text { font-size: 11px; color: var(--gold); letter-spacing: 3px; animation: blink 0.5s step-end infinite; }
+    #transition-bar-wrap { width: 200px; height: 14px; border: 2px solid var(--gold-dark); background: #000; overflow: hidden; }
+    #transition-bar { height: 100%; background: linear-gradient(90deg, var(--gold-dark), var(--gold)); width: 0%; transition: width 0.6s ease; }
 
-    /* 文字游標閃爍 */
-    @keyframes cursor-blink {
-      0%, 100% { opacity: 1; }
-      50% { opacity: 0; }
+    /* ── TOP NAV ── */
+    #top-bar {
+      width: 100%; max-width: 900px;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 8px 10px; margin-bottom: 12px;
+      border-bottom: 2px solid rgba(0,0,0,0.2); gap: 6px; flex-wrap: wrap;
+    }
+    #top-bar .game-title { font-size: 8px; color: #000; text-shadow: 1px 1px 0 #fff; letter-spacing: 2px; font-weight: bold; }
+    .nav-tabs { display: flex; gap: 4px; }
+    .nav-tab {
+      font-family: 'Press Start 2P', monospace; font-size: 8px;
+      padding: 5px 10px; background: rgba(15,23,42,0.8); border: 2px solid #334155;
+      color: var(--dim); cursor: pointer; letter-spacing: 1px; transition: all 0.1s;
+    }
+    .nav-tab:hover { color: var(--white); border-color: #64748b; }
+    .nav-tab.active { background: #1e293b; color: var(--gold); border-color: var(--gold); }
+
+    /* ── DIALOG BOX ── */
+    .dialog-box {
+      background: linear-gradient(180deg, #1e3a8a 0%, #1e1b4b 100%);
+      border: 3px solid var(--white);
+      box-shadow: 0 0 0 2px #000, 0 0 0 4px #0ea5e9, 4px 4px 0 #000;
+      padding: 16px 18px; position: relative;
+    }
+    .dialog-speaker {
+      position: absolute; top: -11px; left: 10px;
+      background: #1e3a8a; border: 2px solid var(--white);
+      padding: 2px 8px; font-size: 8px; color: var(--gold); letter-spacing: 1px;
     }
     .dialog-cursor {
-      display: inline-block;
-      width: 10px;
-      height: 10px;
-      background-color: #ffe066;
-      vertical-align: middle;
-      margin-left: 4px;
-      animation: cursor-blink 0.8s step-end infinite;
+      display: inline-block; width: 8px; height: 8px;
+      background: var(--gold); vertical-align: middle; margin-left: 4px;
+      animation: blink 0.7s step-end infinite;
+    }
+    @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
+
+    /* ── TAVERN ── */
+    .tavern-grid { display: grid; grid-template-columns: 1fr; gap: 14px; }
+    @media (min-width: 768px) { .tavern-grid { grid-template-columns: 1.2fr 1fr; } }
+    .tavern-scene {
+      background: linear-gradient(180deg, #78350f 0%, #451a03 60%, #1c1917 100%);
+      border: 3px solid var(--gold-dark); box-shadow: var(--shadow-gold);
+      padding: 12px; position: relative; min-height: 380px; overflow: hidden;
+    }
+    .tavern-scene::before {
+      content: ''; position: absolute; bottom: 0; left: 0; right: 0; height: 60%;
+      background:
+        repeating-linear-gradient(90deg, rgba(245,200,66,0.1) 0, rgba(245,200,66,0.1) 1px, transparent 1px, transparent 32px),
+        repeating-linear-gradient(0deg, rgba(245,200,66,0.1) 0, rgba(245,200,66,0.1) 1px, transparent 1px, transparent 32px);
+      pointer-events: none;
+    }
+    .tavern-bar {
+      display: flex; justify-content: space-between; align-items: flex-start;
+      border-bottom: 4px solid #451a03; padding-bottom: 8px; margin-bottom: 12px;
+      font-size: 18px; background: rgba(0,0,0,0.2); padding: 8px; border-radius: 4px;
+    }
+    .patron {
+      display: flex; flex-direction: column; align-items: center; gap: 4px;
+      cursor: pointer; transition: transform 0.15s; position: relative; padding: 4px;
+    }
+    .patron:hover { transform: translateY(-4px); }
+    .patron .emoji { font-size: 32px; filter: drop-shadow(0 3px 3px rgba(0,0,0,0.7)); }
+    .patron .name-tag {
+      font-size: 7px; background: rgba(0,0,0,0.85); border: 1px solid var(--gold-dark);
+      color: var(--gold); padding: 2px 5px; white-space: nowrap; letter-spacing: 1px;
+    }
+    .tavern-tables { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 8px 0; position: relative; z-index: 5; }
+    .table-card {
+      background: rgba(15,23,42,0.75); border: 2px solid #334155; padding: 8px;
+      cursor: pointer; transition: background 0.15s, border-color 0.15s; position: relative;
+    }
+    .table-card:hover { background: rgba(15,23,42,0.95); border-color: var(--gold); }
+    .table-card .live-badge {
+      position: absolute; top: -6px; right: -4px; background: var(--red);
+      font-size: 6px; padding: 2px 4px; color: #fff; border: 1px solid #f87171;
+      letter-spacing: 1px; animation: blink 1.2s step-end infinite;
+    }
+    .table-card .table-name { font-size: 7px; color: var(--gold); border-bottom: 1px dashed #475569; padding-bottom: 4px; margin-bottom: 6px; }
+    .table-card .table-emojis { display: flex; justify-content: space-around; font-size: 20px; filter: drop-shadow(0 2px 2px rgba(0,0,0,0.8)); }
+    .gigi-table {
+      grid-column: 1 / -1; background: rgba(0,0,0,0.8); border: 2px solid var(--gold-dark); padding: 10px 12px;
+      cursor: pointer; transition: background 0.15s; display: flex; align-items: center; gap: 12px;
+    }
+    .gigi-table:hover { background: #000; border-color: var(--gold); }
+    .gigi-table .badge { background: var(--gold); color: #000; font-size: 7px; padding: 2px 5px; font-weight: bold; letter-spacing: 1px; flex-shrink: 0; }
+    .gigi-table .info { flex: 1; }
+    .gigi-table .info .title { font-size: 8px; color: var(--gold); margin-bottom: 4px; }
+    .gigi-table .info .desc { font-size: 7px; color: var(--dim); }
+
+    /* ── TREASURE CHEST ── */
+    #treasure-chest {
+      position: absolute; bottom: 60px; right: 16px;
+      font-size: 28px; cursor: pointer; z-index: 10;
+      transition: transform 0.2s;
+      filter: drop-shadow(0 2px 4px rgba(0,0,0,0.8));
+      animation: chest-glow 2s ease-in-out infinite;
+    }
+    #treasure-chest:hover { transform: scale(1.2) translateY(-4px); }
+    @keyframes chest-glow {
+      0%,100% { filter: drop-shadow(0 2px 4px rgba(0,0,0,0.8)); }
+      50% { filter: drop-shadow(0 2px 12px rgba(250,204,21,0.9)); }
     }
 
-    /* 飄字好感度特效 */
-    @keyframes favorFloat {
-      0% { opacity: 0; transform: translateY(10px) scale(0.8); }
-      15% { opacity: 1; transform: translateY(0) scale(1.1); }
-      80% { opacity: 1; }
-      100% { opacity: 0; transform: translateY(-40px) scale(1); }
+    /* ── MONSTER (roaming) ── */
+    #roaming-monster {
+      position: fixed; bottom: 80px; z-index: 500;
+      font-size: 28px; cursor: pointer;
+      filter: drop-shadow(2px 2px 0 #000);
+      transition: transform 0.1s;
+      display: none;
     }
-    .favor-text {
-      animation: favorFloat 1.2s cubic-bezier(0.18, 0.89, 0.32, 1.28) forwards;
-      text-shadow: 2px 2px 0 #000;
+    #roaming-monster:hover { transform: scale(1.3); }
+
+    /* ── CMD BUTTONS ── */
+    .cmd-list { display: flex; flex-direction: column; gap: 8px; }
+    .cmd-btn {
+      display: flex; align-items: center; justify-content: space-between; gap: 8px;
+      padding: 12px 14px; font-family: 'Press Start 2P', monospace; font-size: 9px;
+      cursor: pointer; border: 3px solid; transition: transform 0.05s, filter 0.15s;
+      text-align: left; width: 100%; position: relative;
+    }
+    .cmd-btn::after { content: ''; position: absolute; inset: 1px; border: 1px solid rgba(255,255,255,0.1); pointer-events: none; }
+    .cmd-btn:active { transform: translate(2px, 2px); }
+    .cmd-btn:hover { filter: brightness(1.2); }
+    .cmd-btn .arrow { transition: transform 0.15s; color: var(--gold); }
+    .cmd-btn:hover .arrow { transform: translateX(4px); }
+    .cmd-btn .tag { font-size: 7px; padding: 2px 6px; border: 1px solid; opacity: 0.9; flex-shrink: 0; }
+
+    /* ── AVATAR CREATOR ── */
+    .creator-grid { display: grid; grid-template-columns: 1fr; gap: 14px; }
+    @media (min-width: 640px) { .creator-grid { grid-template-columns: 200px 1fr; } }
+    .avatar-stage { display: flex; flex-direction: column; align-items: center; gap: 10px; padding: 18px 14px; }
+    #avatar-canvas-wrap {
+      width: 140px; height: 140px; background: #0f172a;
+      border: 3px solid var(--gold-dark); box-shadow: var(--shadow-gold);
+      position: relative; overflow: hidden; border-radius: 4px;
+    }
+    #avatar-canvas-wrap canvas { width: 100%; height: 100%; image-rendering: pixelated; }
+    .magic-ring {
+      width: 90px; height: 14px; border-radius: 50%;
+      background: radial-gradient(ellipse, rgba(56,189,248,0.5) 0%, transparent 70%);
+      animation: pulse-ring 2s ease-in-out infinite;
+    }
+    @keyframes pulse-ring { 0%,100% { opacity: 0.4; transform: scaleX(0.9); } 50% { opacity: 1; transform: scaleX(1.1); } }
+    .stat-bar-wrap { width: 100%; }
+    .stat-row { display: flex; align-items: center; gap: 6px; margin-bottom: 6px; }
+    .stat-label { font-size: 7px; color: var(--dim); width: 28px; flex-shrink: 0; }
+    .stat-track { flex: 1; height: 8px; background: #0f172a; border: 1px solid #334155; overflow: hidden; }
+    .stat-fill { height: 100%; transition: width 0.4s ease; }
+    .stat-fill.hp { background: linear-gradient(90deg, #b91c1c, #f43f5e); }
+    .stat-fill.mp { background: linear-gradient(90deg, #1d4ed8, #38bdf8); }
+    .stat-fill.atk { background: linear-gradient(90deg, #854d0e, var(--gold)); }
+    .stat-fill.spd { background: linear-gradient(90deg, #14532d, var(--green)); }
+    .stat-val { font-size: 7px; color: var(--dim); width: 22px; text-align: right; }
+    .opt-section { margin-bottom: 12px; }
+    .opt-label { font-size: 7px; color: var(--cyan); letter-spacing: 1px; margin-bottom: 6px; }
+    .opt-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px; }
+    .opt-btn {
+      font-family: 'Press Start 2P', monospace; font-size: 7px; padding: 5px 4px;
+      background: #0f172a; border: 2px solid #334155; color: var(--dim);
+      cursor: pointer; transition: all 0.1s; text-align: center;
+    }
+    .opt-btn:hover { border-color: #64748b; color: var(--white); }
+    .opt-btn.selected { background: #1e3a8a; border-color: var(--cyan); color: var(--white); }
+    .rpg-input {
+      width: 100%; background: rgba(0,0,0,0.6); border: 2px solid #334155;
+      border-bottom: 2px solid var(--gold-dark); color: var(--white);
+      font-family: 'Press Start 2P', monospace; font-size: 9px;
+      padding: 8px 8px 8px 24px; outline: none; transition: border-color 0.2s;
+    }
+    .rpg-input:focus { border-color: var(--gold); }
+    .rpg-input::placeholder { color: #475569; }
+    .input-wrap { position: relative; }
+    .input-prefix { position: absolute; left: 8px; top: 50%; transform: translateY(-50%); font-size: 9px; color: var(--cyan); pointer-events: none; }
+    .title-chips { display: flex; flex-wrap: wrap; gap: 4px; }
+    .title-chip {
+      font-family: 'Press Start 2P', monospace; font-size: 7px; padding: 5px 8px;
+      background: #0f172a; border: 2px solid #334155; color: var(--dim); cursor: pointer; transition: all 0.1s;
+    }
+    .title-chip:hover { border-color: #64748b; color: var(--white); }
+    .title-chip.selected { background: #3b0764; border-color: #d8b4fe; color: #d8b4fe; }
+    .title-chip.secret { background: #1a0a00; border-color: var(--gold); color: var(--gold); animation: blink 1s step-end infinite; }
+
+    /* ── RSVP ── */
+    .rsvp-grid { display: grid; grid-template-columns: 1fr; gap: 14px; }
+    @media (min-width: 640px) { .rsvp-grid { grid-template-columns: 240px 1fr; } }
+    .hp-bar-track { width: 100%; height: 20px; background: #000; border: 2px solid #1e293b; overflow: hidden; position: relative; }
+    .hp-bar-fill { height: 100%; background: linear-gradient(90deg, #b91c1c, #f43f5e); transition: width 0.6s ease-out; box-shadow: inset -3px 0 0 #7f1d1d; }
+    .hp-bar-fill::after { content: ''; position: absolute; inset: 0; background: linear-gradient(180deg, rgba(255,255,255,0.15) 50%, transparent 50%); }
+    .hp-bar-text { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-size: 8px; color: #fff; text-shadow: 1px 1px 0 #000; }
+    .quest-log-item { display: flex; align-items: flex-start; gap: 10px; padding: 8px 0; border-bottom: 1px dashed #334155; }
+    .quest-log-item:last-child { border-bottom: none; }
+    .quest-log-item .icon { font-size: 16px; flex-shrink: 0; margin-top: 1px; }
+    .quest-log-item .key { font-size: 7px; color: var(--dim); margin-bottom: 3px; letter-spacing: 1px; }
+    .quest-log-item .val { font-size: 9px; color: var(--white); line-height: 1.7; }
+    .form-label { display: block; font-size: 7px; color: var(--cyan); letter-spacing: 2px; margin-bottom: 6px; text-transform: uppercase; }
+    .attend-btns { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+    .attend-btn {
+      padding: 14px 8px; font-family: 'Press Start 2P', monospace; font-size: 9px;
+      cursor: pointer; border: 3px solid; text-align: center; position: relative; transition: all 0.1s; letter-spacing: 1px;
+    }
+    .attend-btn::after { content: ''; position: absolute; inset: 1px; border: 1px solid rgba(255,255,255,0.1); pointer-events: none; }
+    .attend-btn.yes { background: #064e3b; color: var(--green); border-color: #14532d; box-shadow: 3px 3px 0 #000; }
+    .attend-btn.yes.selected, .attend-btn.yes:hover { background: #14532d; border-color: var(--green); box-shadow: 0 0 12px rgba(34,197,94,0.4), 3px 3px 0 #000; }
+    .attend-btn.no { background: #450a0a; color: var(--red); border-color: #7f1d1d; box-shadow: 3px 3px 0 #000; }
+    .attend-btn.no.selected, .attend-btn.no:hover { background: #7f1d1d; border-color: var(--red); box-shadow: 0 0 12px rgba(239,68,68,0.4), 3px 3px 0 #000; }
+    #rsvp-avatar-wrap { width: 56px; height: 56px; background: #0f172a; border: 2px solid #334155; overflow: hidden; flex-shrink: 0; border-radius: 4px; }
+    #rsvp-avatar-wrap canvas { width: 100%; height: 100%; image-rendering: pixelated; }
+    .party-box { display: flex; align-items: center; gap: 10px; padding: 10px; background: rgba(0,0,0,0.4); border: 2px solid #334155; border-radius: 4px; }
+    .party-info .name { font-size: 9px; color: var(--green); margin-bottom: 4px; }
+    .party-info .title { font-size: 7px; color: var(--dim); }
+
+    /* ── DAMAGE FLOAT ── */
+    .dmg-float {
+      position: absolute; font-size: 10px; font-weight: bold;
+      pointer-events: none; text-shadow: 2px 2px 0 #000; z-index: 100;
+      animation: dmgRise 1.2s ease-out forwards;
+    }
+    @keyframes dmgRise {
+      0%   { opacity: 1; transform: translateY(0) scale(1); }
+      20%  { opacity: 1; transform: translateY(-10px) scale(1.2); }
+      100% { opacity: 0; transform: translateY(-60px) scale(0.9); }
     }
 
-    /* 對話氣泡效果 */
-    .speech-bubble {
-      position: relative;
-      background: #000;
-      border: 2px solid #fff;
+    /* ── SUCCESS SCREEN ── */
+    #success-view {
+      display: none; text-align: center; padding: 40px 20px; position: relative;
+      border-radius: 8px; overflow: hidden; animation: fadeIn 0.5s ease; background: var(--bg);
     }
-    .speech-bubble::after {
-      content: '';
-      position: absolute;
-      bottom: -8px;
-      left: 20px;
-      border-width: 8px 8px 0;
-      border-style: solid;
-      border-color: #000 transparent;
-      display: block;
-      width: 0;
+    #success-view.active { display: block; }
+    #success-view::before {
+      content: ''; position: absolute; bottom: 0; left: 0; right: 0; height: 35%;
+      background: linear-gradient(180deg, #16a34a 0%, #15803d 10%, #78350f 10%, #451a03 100%);
+      z-index: 0; pointer-events: none;
     }
-    .speech-bubble::before {
-      content: '';
-      position: absolute;
-      bottom: -11px;
-      left: 19px;
-      border-width: 9px 9px 0;
-      border-style: solid;
-      border-color: #fff transparent;
-      display: block;
-      width: 0;
-      z-index: -1;
+    .victory-star { font-size: 48px; animation: spin-float 3s ease-in-out infinite; position: relative; z-index: 5; filter: drop-shadow(0 4px 6px rgba(0,0,0,0.3)); }
+    @keyframes spin-float { 0%,100% { transform: translateY(0) rotate(-5deg); } 50% { transform: translateY(-10px) rotate(5deg); } }
+    .level-up-banner {
+      display: inline-block; background: #1e293b; border: 4px solid var(--gold);
+      color: var(--gold); font-size: 16px; padding: 10px 20px; border-radius: 30px;
+      box-shadow: 0 0 15px rgba(250,204,21,0.6); margin-bottom: 20px;
+      position: relative; z-index: 5; text-shadow: 2px 2px 0 #000;
     }
 
-    /* 淡出轉場效果 */
-    .fade-out {
-      animation: fadeToBlack 1s ease-in-out forwards;
+    /* ── PAGE HEADER ── */
+    .page-header { text-align: center; margin-bottom: 14px; }
+    .page-header .tag {
+      display: inline-block; background: var(--red); border: 2px solid #f87171; color: #fff;
+      font-size: 7px; padding: 3px 10px; letter-spacing: 2px; margin-bottom: 8px; animation: blink 1.5s step-end infinite;
     }
-    @keyframes fadeToBlack {
-      to {
-        opacity: 0;
-        transform: scale(0.97);
-      }
+    .page-header .tag.green { background: #14532d; border-color: var(--green); color: var(--green); }
+    .page-header .tag.purple { background: #4c1d95; border-color: var(--purple); color: var(--white); }
+    .page-header h1 {
+      font-size: 14px; color: #000; letter-spacing: 2px; line-height: 1.4;
+      text-shadow: 1px 1px 0 #fff, -1px -1px 0 #fff, 1px -1px 0 #fff, -1px 1px 0 #fff;
+    }
+    @media (max-width: 480px) { .page-header h1 { font-size: 10px; } }
+
+    /* ── MISC ── */
+    .float-anim { animation: float 3s ease-in-out infinite; }
+    @keyframes float { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-7px); } }
+    .divider { border: none; border-top: 1px dashed #334155; margin: 12px 0; }
+    .text-gold { color: var(--gold); } .text-cyan { color: var(--cyan); } .text-green { color: var(--green); }
+    .text-red { color: var(--red); } .text-dim { color: var(--dim); } .text-white { color: var(--white); } .text-purple { color: var(--purple); }
+    .rpg-textarea {
+      width: 100%; background: rgba(0,0,0,0.6); border: 2px solid #334155; border-bottom: 2px solid var(--gold-dark);
+      color: var(--white); font-family: 'Press Start 2P', monospace; font-size: 9px;
+      padding: 10px; outline: none; resize: none; transition: border-color 0.2s; line-height: 1.8;
+    }
+    .rpg-textarea:focus { border-color: var(--gold); }
+    .rpg-textarea::placeholder { color: #475569; }
+    .pixel-progress-wrap { height: 12px; background: #0f172a; border: 2px solid #334155; overflow: hidden; }
+    .pixel-progress-bar {
+      height: 100%; width: 0%; transition: width 0.4s ease;
+      background: repeating-linear-gradient(90deg, var(--gold) 0px, var(--gold) 8px, transparent 8px, transparent 10px);
+    }
+    #global-float { position: fixed; inset: 0; pointer-events: none; z-index: 500; }
+
+    /* ── DICE MINI GAME ── */
+    #dice-modal {
+      position: fixed; inset: 0; z-index: 8000; background: rgba(0,0,0,0.85);
+      display: none; align-items: center; justify-content: center;
+    }
+    #dice-modal.active { display: flex; }
+    .dice-window {
+      background: linear-gradient(180deg, #1e1b4b 0%, #0f172a 100%);
+      border: 4px solid var(--gold); box-shadow: 0 0 0 2px #000, 8px 8px 0 #000;
+      padding: 24px; text-align: center; max-width: 340px; width: 90%;
+    }
+    .dice-display {
+      font-size: 48px; margin: 12px 0; height: 64px;
+      display: flex; align-items: center; justify-content: center; gap: 8px;
+    }
+    .dice-result { font-size: 9px; color: var(--cyan); margin: 8px 0; min-height: 24px; }
+
+    /* ── KONAMI / EASTER EGGS ── */
+    #secret-modal {
+      position: fixed; inset: 0; z-index: 9500; background: rgba(0,0,0,0.95);
+      display: none; align-items: center; justify-content: center; flex-direction: column; gap: 16px;
+    }
+    #secret-modal.active { display: flex; animation: fadeIn 0.5s ease; }
+    .secret-window {
+      background: #000; border: 4px solid var(--gold); padding: 28px;
+      text-align: center; max-width: 400px; width: 90%;
+      box-shadow: 0 0 40px rgba(250,204,21,0.5);
+    }
+    #secret-modal canvas { image-rendering: pixelated; }
+
+    /* ── MONSTER BATTLE ── */
+    #battle-modal {
+      position: fixed; inset: 0; z-index: 8500; background: rgba(0,0,0,0.9);
+      display: none; align-items: center; justify-content: center;
+    }
+    #battle-modal.active { display: flex; }
+    .battle-window {
+      background: linear-gradient(180deg, #0f0f1a 0%, #000 100%);
+      border: 4px solid var(--red); padding: 20px;
+      max-width: 380px; width: 90%; text-align: center;
+      box-shadow: 0 0 0 2px #000, 0 0 40px rgba(239,68,68,0.4), 8px 8px 0 #000;
+    }
+    .monster-hp-track { width: 100%; height: 14px; background: #000; border: 2px solid #7f1d1d; overflow: hidden; margin: 8px 0; position: relative; }
+    .monster-hp-fill { height: 100%; background: linear-gradient(90deg, #dc2626, #f87171); transition: width 0.4s; }
+    .battle-log { font-size: 8px; color: var(--green); min-height: 36px; line-height: 2; margin: 8px 0; }
+    .battle-btns { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; margin-top: 8px; }
+
+    /* ── FOOTER ── */
+    .page-footer { text-align: center; margin-top: 24px; font-size: 7px; color: #000; text-shadow: 1px 1px 0 #fff; letter-spacing: 2px; font-weight: bold; }
+
+    /* ── KONAMI indicator ── */
+    #konami-progress {
+      position: fixed; bottom: 8px; left: 50%; transform: translateX(-50%);
+      font-size: 7px; color: rgba(250,204,21,0.4); letter-spacing: 2px; z-index: 1000;
+      pointer-events: none; transition: opacity 0.5s;
+    }
+
+    @media (max-width: 480px) {
+      .opt-grid { grid-template-columns: repeat(2, 1fr); }
+      .tavern-tables { grid-template-columns: 1fr; }
+      .attend-btns { grid-template-columns: 1fr; }
+      .nav-tab { padding: 4px 7px; font-size: 7px; }
     }
   </style>
 </head>
-<body class="w-full h-full text-[#e0e0e0] crt relative flex flex-col items-center justify-start overflow-y-auto p-3 md:p-6 select-none">
+<body>
 
-  <!-- 背景微弱塵埃微粒 -->
-  <div class="absolute inset-0 pointer-events-none overflow-hidden z-0">
-    <div class="pixel-particle" style="top:20%; left:12%; animation-delay:0.2s"></div>
-    <div class="pixel-particle" style="top:35%; left:78%; animation-delay:1s"></div>
-    <div class="pixel-particle" style="top:55%; left:6%; animation-delay:1.8s"></div>
-    <div class="pixel-particle" style="top:75%; left:85%; animation-delay:0.5s"></div>
-    <div class="pixel-particle" style="top:90%; left:25%; animation-delay:1.3s"></div>
-  </div>
+<!-- ============================================================  TITLE SCREEN ============================================================ -->
+<div id="title-screen">
+  <canvas id="title-canvas" width="320" height="180"></canvas>
+  <div class="title-logo">★ DEEJAI BISTRO ★<br><span style="font-size:0.6em;color:var(--cyan);">REUNION RPG</span></div>
+  <div class="title-sub">同學會邀請函 v5.0</div>
+  <div class="press-start">[ PRESS ANY KEY TO START ]</div>
+  <div id="title-copyright">© 2026 DEEJAI BISTRO PRODUCTIONS</div>
+  <div class="title-hint">↑↑↓↓←→←→BA = ???</div>
+  <div class="title-version">VER 5.0.0</div>
+</div>
 
-  <!-- 頂部標題區 -->
-  <div class="text-center z-10 w-full max-w-5xl mb-4 md:mb-6 mt-2">
-    <div class="inline-block px-4 py-1.5 bg-yellow-950/80 border-2 border-yellow-600 text-[#ffe066] text-[10px] tracking-widest font-bold uppercase mb-2 rounded shadow-lg">
-      🍻 WELCOME TO DEEJAI BISTRO TAVERN 🍻
+<!-- ============================================================  ANIMATED BG ============================================================ -->
+<canvas id="bg-canvas"></canvas>
+
+<!-- ============================================================  SCENE TRANSITION ============================================================ -->
+<div id="transition-overlay">
+  <div id="transition-text">LOADING...</div>
+  <div id="transition-bar-wrap"><div id="transition-bar"></div></div>
+</div>
+
+<!-- ============================================================  GLOBAL FLOATS ============================================================ -->
+<div id="global-float"></div>
+
+<!-- ============================================================  ROAMING MONSTER ============================================================ -->
+<div id="roaming-monster" onclick="startBattle()" title="有危險！點擊迎戰！">👹</div>
+
+<!-- ============================================================  KONAMI INDICATOR ============================================================ -->
+<div id="konami-progress"></div>
+
+<!-- ============================================================  DICE MODAL ============================================================ -->
+<div id="dice-modal">
+  <div class="dice-window">
+    <div style="font-size:9px;color:var(--gold);letter-spacing:2px;margin-bottom:8px;">🎰 賭徒骰子挑戰</div>
+    <div style="font-size:7px;color:var(--dim);margin-bottom:12px;">骰出6點可獲得稱號「天選之人」！</div>
+    <div class="dice-display" id="dice-display">🎲 🎲</div>
+    <div class="dice-result" id="dice-result">點擊骰子開始！</div>
+    <div style="margin-top:4px;font-size:7px;color:var(--dim);" id="dice-score-display"></div>
+    <div style="display:flex;gap:8px;justify-content:center;margin-top:16px;flex-wrap:wrap;">
+      <button class="btn btn-gold" onclick="rollDice()">🎲 投擲骰子</button>
+      <button class="btn btn-dark" onclick="closeDice()">✗ 離開賭場</button>
     </div>
-    <p class="text-[9px] text-amber-600 uppercase tracking-widest font-bold">點擊任何角落的冒險者，聽聽他們的酒後真言！</p>
+    <div style="margin-top:12px;font-size:7px;color:var(--dim);" id="dice-streak">連勝：<span id="dice-streak-count">0</span> 次</div>
+  </div>
+</div>
+
+<!-- ============================================================  BATTLE MODAL ============================================================ -->
+<div id="battle-modal">
+  <div class="battle-window">
+    <div style="font-size:8px;color:var(--red);letter-spacing:2px;animation:blink 0.6s step-end infinite;">⚠ BATTLE START ⚠</div>
+    <div id="monster-name" style="font-size:11px;color:var(--gold);margin:8px 0;text-shadow:2px 2px 0 #000;">???</div>
+    <div id="monster-sprite" style="font-size:52px;margin:8px 0;filter:drop-shadow(0 4px 8px rgba(239,68,68,0.8));animation:float 1s ease-in-out infinite;">👹</div>
+    <div class="monster-hp-track">
+      <div class="monster-hp-fill" id="monster-hp-fill" style="width:100%;"></div>
+    </div>
+    <div style="font-size:7px;color:var(--dim);margin-bottom:4px;">MONSTER HP: <span id="monster-hp-text">100</span>/100</div>
+    <div class="battle-log" id="battle-log">敵人出現了！</div>
+    <div class="battle-btns">
+      <button class="btn btn-red" onclick="battleAction('attack')">⚔️ 攻擊</button>
+      <button class="btn btn-purple" onclick="battleAction('magic')">✨ 魔法</button>
+      <button class="btn btn-gold" onclick="battleAction('item')">🍺 丟啤酒</button>
+      <button class="btn btn-dark" onclick="battleAction('run')">💨 逃跑</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============================================================  SECRET MODAL ============================================================ -->
+<div id="secret-modal">
+  <div class="secret-window">
+    <div style="font-size:8px;color:var(--gold);letter-spacing:3px;margin-bottom:8px;animation:blink 0.5s step-end infinite;">★ SECRET UNLOCKED ★</div>
+    <div id="secret-title" style="font-size:12px;color:var(--cyan);margin:12px 0;text-shadow:2px 2px 0 #000;line-height:1.8;"></div>
+    <div id="secret-desc" style="font-size:8px;color:var(--white);margin:8px 0;line-height:2;"></div>
+    <div id="secret-reward" style="font-size:9px;color:var(--gold);margin:12px 0;"></div>
+    <button class="btn btn-gold" onclick="closeSecret()" style="margin-top:8px;">[ OK ]</button>
+  </div>
+</div>
+
+<!-- ============================================================  MAIN APP ============================================================ -->
+<div id="app">
+
+  <!-- TOP BAR -->
+  <div id="top-bar">
+    <div class="game-title" onclick="konami_titleClick()" style="cursor:pointer;">★ DEEJAI BISTRO RPG ★</div>
+    <div class="nav-tabs">
+      <button class="nav-tab active" onclick="switchScreen('home')" id="tab-home">🍺 酒館</button>
+      <button class="nav-tab" onclick="switchScreen('creator')" id="tab-creator">🎨 角色</button>
+      <button class="nav-tab" onclick="switchScreen('rsvp')" id="tab-rsvp">⚔️ 回覆</button>
+    </div>
   </div>
 
-  <!-- 主容器 (RWD: 桌機左右雙欄，手機上下單欄) -->
-  <div id="portal-app" class="w-full max-w-5xl z-10 grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch">
+  <!-- ══ SCREEN 1: HOME ══ -->
+  <div id="screen-home" class="screen active">
+    <div class="page-header">
+      <div class="tag">⚔ EVENT ENCOUNTER: CLASS REUNION 2026 ⚔</div>
+      <h1>DeeJai Bistro<br><span style="font-size:0.7em;color:#000;">同學會邀請函</span></h1>
+    </div>
 
-    <!-- ==================== 左欄：熱鬧的小酒館內景 (佔 7 欄) ==================== -->
-    <div class="lg:col-span-7 flex flex-col gap-4">
-      <div class="tavern-border-wood p-4 stone-floor relative min-h-[380px] flex flex-col justify-between overflow-hidden shadow-2xl rounded-lg">
-        
-        <!-- 好感度與特效飄字貨架 -->
-        <div id="favor-container" class="absolute inset-0 pointer-events-none overflow-hidden z-30"></div>
+    <div class="tavern-grid">
+      <!-- LEFT: TAVERN SCENE -->
+      <div class="tavern-scene panel" style="padding-bottom:14px;">
+        <div class="panel-label">🏰 DEEJAI TAVERN — MAIN HALL</div>
 
-        <!-- 背景酒牆與吧台桌 (Tavern Bar Rack) -->
-        <div class="w-full flex justify-between items-start border-b-4 border-amber-950 pb-2">
-          <!-- 左側酒桶與貨架 -->
-          <div class="flex gap-2">
-            <div class="text-2xl filter drop-shadow-[0_2px_0_rgba(0,0,0,1)] select-none">🛢️</div>
-            <div class="text-xl filter drop-shadow-[0_2px_0_rgba(0,0,0,1)] select-none">🍷</div>
-            <div class="text-xl filter drop-shadow-[0_2px_0_rgba(0,0,0,1)] select-none">🍾</div>
+        <div class="tavern-bar" style="margin-top:10px;">
+          <div style="font-size:22px;filter:drop-shadow(0 2px 0 rgba(0,0,0,0.8));">🛢️🍷</div>
+          <div class="patron" onclick="keeperClickCount()" id="keeper-patron">
+            <div class="emoji" id="keeper-emoji">👩‍🦰</div>
+            <div class="name-tag">女掌櫃 Abus</div>
           </div>
-          <!-- 吧台中央：女掌櫃 Abus -->
-          <div class="text-center -mt-1 relative group cursor-pointer" onclick="triggerPatron('keeper')">
-            <!-- 閃爍燭光 -->
-            <div class="absolute -top-3 left-1/2 -translate-x-1/2 text-xs candle-light select-none">🕯️</div>
-            <div class="text-4xl filter drop-shadow-[0_4px_4px_rgba(0,0,0,0.6)] select-none transition-transform group-hover:scale-110">👩‍🦰</div>
-            <div class="mt-1 px-1.5 py-0.5 bg-black/80 border border-[#854d0e] rounded text-[8px] text-amber-400 font-bold tracking-wider">
-              女掌櫃 Abus
+          <div style="font-size:22px;filter:drop-shadow(0 2px 0 rgba(0,0,0,0.8));">🍾🛢️</div>
+        </div>
+
+        <div class="tavern-tables">
+          <div class="table-card" onclick="triggerPatron('cards')">
+            <div class="live-badge">LIVE</div>
+            <div class="table-name">🃏 勇者紙牌</div>
+            <div class="table-emojis"><span>👹</span><span style="font-size:14px;">🃏</span><span>🧝</span></div>
+          </div>
+          <div class="table-card" onclick="triggerPatron('music')">
+            <div class="live-badge" style="background:#14532d;border-color:#22c55e;color:#22c55e;animation:none;">BAND</div>
+            <div class="table-name">🎸 皇家現場</div>
+            <div class="table-emojis"><span>🧑‍🎤</span><span style="font-size:14px;animation:blink 0.8s step-end infinite;">🎶</span><span>🍻</span></div>
+          </div>
+          <div class="table-card" onclick="triggerPatron('raid')">
+            <div class="live-badge" style="background:#450a0a;border-color:#ef4444;color:#ef4444;animation:none;">SECRET</div>
+            <div class="table-name">🗺️ 突襲計畫</div>
+            <div class="table-emojis"><span>🧛</span><span style="font-size:14px;">🗺️</span><span>👿</span></div>
+          </div>
+          <div class="table-card" onclick="triggerPatron('magic')">
+            <div class="live-badge" style="background:#1e1b4b;border-color:#a855f7;color:#a855f7;animation:none;">STUDY</div>
+            <div class="table-name">🔮 魔法星象</div>
+            <div class="table-emojis"><span>🧙</span><span style="font-size:14px;">📖</span><span>🔮</span></div>
+          </div>
+          <div class="table-card" onclick="openDice()">
+            <div class="live-badge" style="background:#7f1d1d;border-color:#facc15;color:#facc15;animation:none;">GAMBLE</div>
+            <div class="table-name">🎰 龍裔賭桌</div>
+            <div class="table-emojis"><span>🐉</span><span style="font-size:14px;">🎲</span><span>💰</span></div>
+          </div>
+          <div class="table-card" onclick="triggerPatron('elves')">
+            <div class="live-badge" style="background:#064e3b;border-color:#34d399;color:#34d399;animation:none;">REST</div>
+            <div class="table-name">🧝‍♀️ 森林遊俠</div>
+            <div class="table-emojis"><span>🧝‍♀️</span><span style="font-size:14px;">🥗</span><span>🧝‍♂️</span></div>
+          </div>
+
+          <div class="gigi-table" onclick="triggerPatron('gigi')">
+            <div class="badge">CHRONICLE</div>
+            <div class="info">
+              <div class="title">✍️ 歷史官 Gigi (試算表記錄席)</div>
+              <div class="desc">點選取得同學會情報</div>
             </div>
-          </div>
-          <!-- 右側酒桶 -->
-          <div class="flex gap-2">
-            <div class="text-xl filter drop-shadow-[0_2px_0_rgba(0,0,0,1)] select-none">🍾</div>
-            <div class="text-xl filter drop-shadow-[0_2px_0_rgba(0,0,0,1)] select-none">🍷</div>
-            <div class="text-2xl filter drop-shadow-[0_2px_0_rgba(0,0,0,1)] select-none">🛢️</div>
+            <div style="font-size:26px;filter:drop-shadow(0 2px 2px rgba(0,0,0,0.8));">🧝‍♀️</div>
           </div>
         </div>
 
-        <!-- 酒館中央動態事件與桌椅配置 -->
-        <div class="grid grid-cols-2 gap-4 my-4 relative z-10">
-          
-          <!-- 一號桌：熱鬧的紙牌賭局 (Card Gaming Table) -->
-          <div class="bg-amber-950/40 border border-amber-800/40 p-2.5 rounded relative cursor-pointer hover:bg-amber-950/60 transition-colors group" onclick="triggerPatron('cards')">
-            <div class="absolute -top-2 -right-2 text-[10px] bg-red-950 border border-red-500 text-red-400 px-1 rounded scale-90">LIVE!</div>
-            <div class="text-[9px] text-amber-200 mb-1 border-b border-dashed border-amber-800 pb-1">🃏 勇者對決牌局</div>
-            
-            <div class="flex justify-around items-center my-2">
-              <span class="text-2xl filter drop-shadow-[0_2px_2px_rgba(0,0,0,0.5)] group-hover:-translate-y-1 transition-transform">👹</span>
-              <span class="text-lg select-none">🃏</span>
-              <span class="text-2xl filter drop-shadow-[0_2px_2px_rgba(0,0,0,0.5)] group-hover:-translate-y-1 transition-transform" style="animation-delay: 0.2s">🧝</span>
-            </div>
-            <p class="text-[8px] text-slate-400 text-center">半獸人 vs 高級精靈</p>
-          </div>
+        <!-- Treasure Chest Easter Egg -->
+        <div id="treasure-chest" onclick="openChest()" title="神秘寶箱？！">🎁</div>
 
-          <!-- 二號桌：吟遊詩人與熱舞派對 (Bard & Music Corner) -->
-          <div class="bg-amber-950/40 border border-amber-800/40 p-2.5 rounded relative cursor-pointer hover:bg-amber-950/60 transition-colors group" onclick="triggerPatron('music')">
-            <div class="absolute -top-2 -right-2 text-[10px] bg-emerald-950 border border-emerald-500 text-emerald-400 px-1 rounded scale-90">MUSIC</div>
-            <div class="text-[9px] text-amber-200 mb-1 border-b border-dashed border-amber-800 pb-1">🎸 皇家現場演奏</div>
-            
-            <div class="flex justify-around items-center my-2">
-              <span class="text-2xl filter drop-shadow-[0_2px_2px_rgba(0,0,0,0.5)] group-hover:rotate-12 transition-transform">🧑‍🎤</span>
-              <span class="text-xl select-none animate-bounce">🎶</span>
-              <span class="text-2xl filter drop-shadow-[0_2px_2px_rgba(0,0,0,0.5)] group-hover:-rotate-12 transition-transform">🍻</span>
-            </div>
-            <p class="text-[8px] text-slate-400 text-center">吟遊詩人與嗨啤群眾</p>
-          </div>
-
-          <!-- 三號桌：角落神祕的作戰會議 (Secret Planning Corner) -->
-          <div class="bg-amber-950/40 border border-amber-800/40 p-2.5 rounded relative cursor-pointer hover:bg-amber-950/60 transition-colors group" onclick="triggerPatron('raid')">
-            <div class="absolute -top-2 -right-2 text-[10px] bg-purple-950 border border-purple-500 text-purple-400 px-1 rounded scale-90">PLANS</div>
-            <div class="text-[9px] text-amber-200 mb-1 border-b border-dashed border-amber-800 pb-1">🛡️ 突襲副本計畫</div>
-            
-            <div class="flex justify-around items-center my-2">
-              <span class="text-2xl filter drop-shadow-[0_2px_2px_rgba(0,0,0,0.5)] group-hover:scale-110 transition-transform">🧛</span>
-              <span class="text-lg select-none">🗺️</span>
-              <span class="text-2xl filter drop-shadow-[0_2px_2px_rgba(0,0,0,0.5)] group-hover:scale-110 transition-transform">👿</span>
-            </div>
-            <p class="text-[8px] text-slate-400 text-center">吸血鬼與密謀惡魔</p>
-          </div>
-
-          <!-- 四號桌：孤單的魔法學者 (Lonely Wizard Study) -->
-          <div class="bg-amber-950/40 border border-amber-800/40 p-2.5 rounded relative cursor-pointer hover:bg-amber-950/60 transition-colors group" onclick="triggerPatron('magic')">
-            <div class="absolute -top-2 -right-2 text-[10px] bg-blue-950 border border-blue-500 text-blue-400 px-1 rounded scale-90">STUDY</div>
-            <div class="text-[9px] text-amber-200 mb-1 border-b border-dashed border-amber-800 pb-1">🔮 賢者魔法研究</div>
-            
-            <div class="flex justify-around items-center my-2">
-              <span class="text-2xl filter drop-shadow-[0_2px_2px_rgba(0,0,0,0.5)] group-hover:scale-110 transition-transform">🧙</span>
-              <span class="text-lg select-none">📖</span>
-              <span class="text-xl filter drop-shadow-[0_2px_2px_rgba(0,0,0,0.5)] candle-light">🔮</span>
-            </div>
-            <p class="text-[8px] text-slate-400 text-center">古老法術譯碼大師</p>
-          </div>
-
+        <!-- Speech bubble -->
+        <div id="patron-bubble" style="display:none;margin-top:8px;padding:8px 10px;background:rgba(0,0,0,0.8);border:2px solid var(--gold);font-size:9px;color:var(--white);line-height:1.8;position:relative;cursor:pointer;">
+          <div id="bubble-speaker" style="position:absolute;top:-10px;left:8px;background:#1e1b4b;border:2px solid var(--gold);padding:1px 6px;font-size:7px;color:var(--gold);">???</div>
+          <span id="bubble-text"></span><span class="dialog-cursor" id="bubble-cursor" style="display:none;"></span>
         </div>
 
-        <!-- 酒館動態即時對話泡泡 (Floating Speech Bubble) -->
-        <div id="patron-bubble" class="speech-bubble p-2 rounded text-[10px] text-[#ffe066] max-w-xs mx-auto text-center hidden mb-2 transition-all duration-300">
-          「聽說今年同學會有免費啤酒暢飲？真的假的！」
+        <div style="display:flex;justify-content:space-between;font-size:7px;color:#facc15;border-top:2px solid #451a03;padding-top:8px;margin-top:8px;opacity:0.8;">
+          <span>🚪 TAVERN GATE</span>
+          <span>● COZY DEEJAI ●</span>
+          <span>ALE 🛢️🚪</span>
+        </div>
+      </div>
+
+      <!-- RIGHT: DIALOG + COMMANDS -->
+      <div style="display:flex;flex-direction:column;gap:12px;">
+        <div class="dialog-box" style="min-height:130px;">
+          <div class="dialog-speaker">說話者：<span id="speaker-name">女掌櫃 Abus</span></div>
+          <div id="dialog-text" style="font-size:9px;line-height:1.9;color:#fff;margin-top:10px;min-height:80px;cursor:pointer;" onclick="skipTypewriter()"></div>
+          <div style="text-align:right;margin-top:4px;">
+            <span id="next-indicator" style="display:none;font-size:9px;color:var(--gold);animation:float 0.6s ease-in-out infinite;">▼</span>
+          </div>
         </div>
 
-        <!-- 底部大門裝飾 -->
-        <div class="flex justify-between items-center border-t-4 border-amber-950 pt-2 mt-auto text-[8px] text-amber-700 font-bold">
-          <span>🚪 ENTRANCE PORTAL</span>
-          <span>● DEEJAI COZY BAR ●</span>
-          <span>BARRELS OF ALE 🚪</span>
+        <div class="cmd-list" id="choices-container" style="visibility:hidden;">
+          <button class="cmd-btn" onclick="switchScreen('creator')"
+            style="background:#1e293b;color:var(--gold);border-color:var(--gold);box-shadow:3px 3px 0 #000;">
+            <span><span class="arrow">▶</span> 🎨 建立我的角色造型</span>
+            <span class="tag" style="color:var(--gold);border-color:var(--gold-dark);">AVATAR</span>
+          </button>
+          <button class="cmd-btn" onclick="switchScreen('rsvp')"
+            style="background:#064e3b;color:var(--green);border-color:#14532d;box-shadow:3px 3px 0 #000;">
+            <span><span class="arrow" style="color:var(--green);">▶</span> 直接填寫邀請函</span>
+            <span class="tag" style="color:var(--green);border-color:#064e3b;">RSVP</span>
+          </button>
+          <button class="cmd-btn" onclick="drinkAction()"
+            style="background:#0f172a;color:var(--dim);border-color:#334155;box-shadow:3px 3px 0 #000;">
+            <span><span class="arrow" style="color:var(--dim);">▶</span> 🍺 請 Abus 喝特調黑麥汁</span>
+            <span class="tag" style="color:var(--red);border-color:#450a0a;animation:blink 1s step-end infinite;">FAVOR+</span>
+          </button>
+          <button class="cmd-btn" onclick="openDice()"
+            style="background:#1a0a00;color:var(--gold);border-color:#854d0e;box-shadow:3px 3px 0 #000;">
+            <span><span class="arrow">▶</span> 🎲 挑戰骰子小遊戲</span>
+            <span class="tag" style="color:var(--gold);border-color:#854d0e;">MINI</span>
+          </button>
         </div>
 
+        <!-- Mini stat display -->
+        <div class="panel" style="padding:10px;font-size:7px;">
+          <div class="panel-label">📊 PARTY STATUS</div>
+          <div style="margin-top:8px;display:flex;flex-direction:column;gap:4px;">
+            <div style="color:var(--dim);">勇者：<span id="hud-name" style="color:var(--green);">（未登記）</span></div>
+            <div style="color:var(--dim);">稱號：<span id="hud-title" style="color:var(--gold);">【傳奇見習生】</span></div>
+            <div style="color:var(--dim);">戰績：<span id="hud-kills" style="color:var(--red);">0 KILLS</span></div>
+            <div style="color:var(--dim);">骰子連勝：<span id="hud-dice" style="color:var(--cyan);">0</span></div>
+          </div>
+        </div>
       </div>
     </div>
 
-    <!-- ==================== 右欄：JRPG 對話系統與指令選單 (佔 5 欄) ==================== -->
-    <div class="lg:col-span-5 flex flex-col gap-4">
+    <div class="page-footer">▲ RETRO 8-BIT CLASS REUNION ENGINE v5.0 ▲</div>
+  </div>
 
-      <!-- JRPG 經典對話框 -->
-      <div class="w-full jrpg-dialog p-4 md:p-5 relative min-h-[160px] flex flex-col justify-between">
-        
-        <!-- 說話者名字標籤 -->
-        <div class="absolute -top-3.5 left-4 bg-[#0a1040] border-2 border-white px-3 py-0.5 text-[10px] text-[#ffe066] font-bold tracking-widest uppercase">
-          說話者：<span id="speaker-name">女掌櫃 Abus</span>
-        </div>
-
-        <!-- 對話文字內容 -->
-        <div class="text-xs md:text-sm leading-relaxed text-white pr-2 mt-2" id="dialog-text">
-          <!-- 這裡會由 JS 打字機動態填入 -->
-        </div>
-
-        <!-- 下一步小三角形指示器 -->
-        <div class="text-right h-4 select-none">
-          <span class="inline-block text-[#ffe066] animate-bounce text-[10px] mr-1" id="next-indicator" style="display:none;">▼</span>
-        </div>
-      </div>
-
-      <!-- 勇者指令選單 (行動方案) -->
-      <div class="w-full space-y-3" id="choices-container" style="visibility: hidden;">
-        
-        <!-- 核心進入按鈕 -->
-        <button onclick="handleChoice('enter')" class="pixel-btn w-full p-4 text-left text-xs bg-emerald-950 hover:bg-emerald-900 text-emerald-400 border-emerald-500 rounded flex items-center justify-between group transition-all">
-          <span class="flex items-center gap-2">
-            <span class="text-amber-400 group-hover:translate-x-1 transition-transform">▶</span>
-            遞上「同學會邀請函」(進入 RSVP)
-          </span>
-          <span class="text-[9px] text-emerald-500 uppercase tracking-widest">[ QUEST START ]</span>
-        </button>
-
-        <!-- 打聽情報按鈕 -->
-        <button onclick="handleChoice('info')" class="pixel-btn w-full p-4 text-left text-xs bg-slate-900 hover:bg-slate-800 text-slate-300 border-slate-600 rounded flex items-center gap-2 group transition-all">
-          <span class="text-amber-400 group-hover:translate-x-1 transition-transform">▶</span>
-          打聽關於這個「酒館任務」的細節
-        </button>
-
-        <!-- 【超高互動性全新按鈕】：請喝一杯解鎖八卦 -->
-        <button onclick="handleChoice('drink')" class="pixel-btn w-full p-4 text-left text-xs bg-amber-950 hover:bg-amber-900 text-[#ffe066] border-amber-600 rounded flex items-center justify-between group transition-all">
-          <span class="flex items-center gap-2">
-            <span class="text-amber-400 group-hover:translate-x-1 transition-transform">▶</span>
-            🍺 請 Abus 喝一杯特調黑麥汁
-          </span>
-          <span class="text-[9px] text-yellow-500 uppercase tracking-widest animate-pulse">[ FAVOR + ]</span>
-        </button>
-
-        <!-- 離開按鈕 -->
-        <button onclick="handleChoice('leave')" class="pixel-btn w-full p-4 text-left text-xs bg-rose-950 hover:bg-rose-900 text-rose-400 border-rose-800 rounded flex items-center gap-2 group transition-all">
-          <span class="text-amber-400 group-hover:translate-x-1 transition-transform">▶</span>
-          沒事，只是路過看看 (隨便逛逛)
-        </button>
-      </div>
-
+  <!-- ══ SCREEN 2: AVATAR CREATOR ══ -->
+  <div id="screen-creator" class="screen">
+    <div class="page-header">
+      <div class="tag purple">🎨 CHARACTER CREATION</div>
+      <h1 style="color:#000;text-shadow:1px 1px 0 #fff,-1px -1px 0 #fff,1px -1px 0 #fff,-1px 1px 0 #fff;">角色捏臉大廳</h1>
     </div>
 
+    <div class="creator-grid">
+      <div>
+        <div class="panel panel-gold avatar-stage">
+          <div class="panel-label">👾 PREVIEW</div>
+          <div id="avatar-canvas-wrap" style="margin-top:10px;" class="float-anim">
+            <canvas id="creator-canvas" width="32" height="32"></canvas>
+          </div>
+          <div class="magic-ring"></div>
+          <div class="stat-bar-wrap" style="margin-top:10px;">
+            <div class="stat-row"><div class="stat-label">HP</div><div class="stat-track"><div class="stat-fill hp" id="stat-hp" style="width:70%"></div></div><div class="stat-val" id="stat-hp-val">70</div></div>
+            <div class="stat-row"><div class="stat-label">MP</div><div class="stat-track"><div class="stat-fill mp" id="stat-mp" style="width:50%"></div></div><div class="stat-val" id="stat-mp-val">50</div></div>
+            <div class="stat-row"><div class="stat-label">ATK</div><div class="stat-track"><div class="stat-fill atk" id="stat-atk" style="width:60%"></div></div><div class="stat-val" id="stat-atk-val">60</div></div>
+            <div class="stat-row"><div class="stat-label">SPD</div><div class="stat-track"><div class="stat-fill spd" id="stat-spd" style="width:45%"></div></div><div class="stat-val" id="stat-spd-val">45</div></div>
+          </div>
+          <button class="btn btn-purple" id="roll-btn" onclick="rollStats()" style="width:100%;margin-top:10px;">
+            <span id="roll-dice">🎲</span> 骰隨機數值
+          </button>
+        </div>
+      </div>
+
+      <div class="panel panel-cyan" style="padding:14px;">
+        <div class="panel-label">⚙️ CUSTOMIZE</div>
+
+        <div style="margin-top:10px;margin-bottom:14px;">
+          <div class="opt-label">👤 冒險者名字</div>
+          <div class="input-wrap">
+            <span class="input-prefix">▶</span>
+            <input type="text" id="char-name" class="rpg-input" placeholder="輸入名字..."
+              oninput="avatar.name=this.value;saveAvatar();" maxlength="12">
+          </div>
+        </div>
+
+        <div class="opt-section">
+          <div class="opt-label">🏷️ 稱號</div>
+          <div class="title-chips" id="title-chips">
+            <span class="title-chip selected" onclick="selectTitle(this,'勇者')">勇者</span>
+            <span class="title-chip" onclick="selectTitle(this,'魔法師')">魔法師</span>
+            <span class="title-chip" onclick="selectTitle(this,'盜賊')">盜賊</span>
+            <span class="title-chip" onclick="selectTitle(this,'聖騎士')">聖騎士</span>
+            <span class="title-chip" onclick="selectTitle(this,'傳說級')">傳說級</span>
+            <span class="title-chip" onclick="selectTitle(this,'史詩掛')">史詩掛</span>
+          </div>
+          <div id="secret-title-area" style="margin-top:6px;display:none;">
+            <span class="title-chip secret" id="secret-title-chip" onclick="selectSecretTitle(this)">???</span>
+          </div>
+        </div>
+
+        <hr class="divider">
+
+        <div class="opt-section">
+          <div class="opt-label">🥚 膚色</div>
+          <div class="opt-grid" id="opt-skin">
+            <button class="opt-btn selected" onclick="setOpt('skin','#ffe5cc',this)">白皙</button>
+            <button class="opt-btn" onclick="setOpt('skin','#fcd34d',this)">陽光</button>
+            <button class="opt-btn" onclick="setOpt('skin','#b45309',this)">小麥</button>
+            <button class="opt-btn" onclick="setOpt('skin','#475569',this)">暗夜</button>
+          </div>
+        </div>
+
+        <div class="opt-section">
+          <div class="opt-label">💇 髮型</div>
+          <div class="opt-grid" id="opt-hair">
+            <button class="opt-btn selected" onclick="setOpt('hairStyle','straight',this)">順直</button>
+            <button class="opt-btn" onclick="setOpt('hairStyle','spiky',this)">刺蝟</button>
+            <button class="opt-btn" onclick="setOpt('hairStyle','twintails',this)">雙馬尾</button>
+            <button class="opt-btn" onclick="setOpt('hairStyle','hat',this)">巫師帽</button>
+          </div>
+        </div>
+
+        <div class="opt-section">
+          <div class="opt-label">🎨 髮色</div>
+          <div class="opt-grid" id="opt-hairColor">
+            <button class="opt-btn selected" style="color:#f97316;" onclick="setOpt('hairColor','#f97316',this)">橘色</button>
+            <button class="opt-btn" style="color:#a3e635;" onclick="setOpt('hairColor','#a3e635',this)">綠色</button>
+            <button class="opt-btn" style="color:#38bdf8;" onclick="setOpt('hairColor','#38bdf8',this)">水藍</button>
+            <button class="opt-btn" style="color:#c084fc;" onclick="setOpt('hairColor','#c084fc',this)">紫色</button>
+          </div>
+        </div>
+
+        <div class="opt-section">
+          <div class="opt-label">👗 服裝</div>
+          <div class="opt-grid" id="opt-outfit">
+            <button class="opt-btn selected" onclick="setOpt('outfit','warrior',this)">戰士</button>
+            <button class="opt-btn" onclick="setOpt('outfit','mage',this)">魔法師</button>
+            <button class="opt-btn" onclick="setOpt('outfit','witch',this)">巫師</button>
+            <button class="opt-btn" onclick="setOpt('outfit','skeleton',this)">骷髏</button>
+          </div>
+        </div>
+
+        <div class="opt-section">
+          <div class="opt-label">👀 眼神</div>
+          <div class="opt-grid" id="opt-eyes">
+            <button class="opt-btn selected" onclick="setOpt('eyes','normal',this)">普通</button>
+            <button class="opt-btn" onclick="setOpt('eyes','tsundere',this)">傲嬌</button>
+            <button class="opt-btn" onclick="setOpt('eyes','closed',this)">月牙</button>
+            <button class="opt-btn" style="color:var(--red);" onclick="setOpt('eyes','red',this)">紅眼</button>
+          </div>
+        </div>
+
+        <div class="opt-section">
+          <div class="opt-label">⚔️ 武器</div>
+          <div class="opt-grid" id="opt-accessory">
+            <button class="opt-btn selected" onclick="setOpt('accessory','sword',this)">聖劍</button>
+            <button class="opt-btn" onclick="setOpt('accessory','shield',this)">圓盾</button>
+            <button class="opt-btn" onclick="setOpt('accessory','staff',this)">木杖</button>
+            <button class="opt-btn" onclick="setOpt('accessory','broom',this)">掃帚</button>
+          </div>
+        </div>
+
+        <hr class="divider">
+        <div style="display:flex;gap:8px;flex-wrap:wrap;">
+          <button class="btn btn-gold" onclick="saveAndGoRsvp()" style="flex:1;">🚀 儲存並填寫邀請函</button>
+          <button class="btn btn-dark" onclick="switchScreen('home')">◀ 返回酒館</button>
+        </div>
+      </div>
+    </div>
+    <div class="page-footer">▲ 造型將自動儲存，填寫 RSVP 時同步顯示 ▲</div>
   </div>
 
-  <!-- 底部版權宣示 -->
-  <div class="mt-8 mb-4 text-center z-10 text-[9px] text-slate-600 tracking-widest">
-    ▲ CLICK THE SCREEN OR PATRONS TO ACTIVATE 8-BIT TAVERN SOUNDS ▲
+  <!-- ══ SCREEN 3: RSVP ══ -->
+  <div id="screen-rsvp" class="screen">
+    <div class="page-header">
+      <div class="tag" style="background:#7f1d1d;border-color:var(--red);color:var(--white);">⚔️ EVENT ENCOUNTER: CLASS REUNION ⚔️</div>
+      <h1 style="color:#000;">RSVP — <span style="color:var(--gold);text-shadow:2px 2px 0 #000;">作戰計畫</span></h1>
+    </div>
+
+    <div class="rsvp-grid">
+      <div style="display:flex;flex-direction:column;gap:12px;">
+        <!-- Boss window -->
+        <div class="panel panel-gold" style="padding:14px;text-align:center;position:relative;overflow:hidden;">
+          <div style="position:absolute;inset:0;background:linear-gradient(180deg,transparent 50%,rgba(0,0,0,0.6));pointer-events:none;"></div>
+          <div style="font-size:8px;color:var(--red);letter-spacing:2px;margin-bottom:4px;position:relative;z-index:5;">★ BOSS LEVEL 99 ★</div>
+          <div style="font-size:12px;color:var(--gold);text-shadow:3px 3px 0 #000;margin-bottom:8px;line-height:1.4;position:relative;z-index:5;">同學會<br>邀請函</div>
+          <div class="float-anim" style="position:relative;height:90px;display:flex;align-items:center;justify-content:center;margin:8px 0;">
+            <div style="position:absolute;bottom:0;width:70px;height:10px;background:radial-gradient(ellipse,rgba(168,85,247,0.5),transparent 70%);border-radius:50%;animation:pulse-ring 2s ease-in-out infinite;"></div>
+            <div style="font-size:52px;filter:drop-shadow(0 4px 8px rgba(0,0,0,0.7));position:relative;z-index:5;">🍻</div>
+            <div style="position:absolute;top:10px;left:25%;width:8px;height:8px;background:var(--gold);animation:blink 0.7s step-end infinite;z-index:5;"></div>
+            <div style="position:absolute;bottom:15px;right:25%;width:10px;height:10px;background:var(--cyan);animation:blink 1.1s step-end infinite;z-index:5;"></div>
+          </div>
+          <p style="font-size:8px;color:var(--cyan);line-height:1.8;position:relative;z-index:5;">好久不見！<br>一起來敘敘舊吧！</p>
+        </div>
+
+        <!-- HP bar -->
+        <div class="panel" style="padding:10px;">
+          <div class="panel-label">👾 BOSS HP</div>
+          <div style="display:flex;justify-content:space-between;margin:10px 0 6px;font-size:8px;">
+            <span class="text-gold">REUNION BOSS</span>
+            <span id="boss-status" class="text-red" style="animation:blink 1.5s step-end infinite;">READY TO RAID</span>
+          </div>
+          <div class="hp-bar-track">
+            <div class="hp-bar-fill" id="hp-bar" style="width:100%;"></div>
+            <div class="hp-bar-text" id="hp-text">100% / 100%</div>
+          </div>
+        </div>
+
+        <!-- Quest log -->
+        <div class="panel" style="padding:14px;">
+          <div class="panel-label">📜 QUEST LOG</div>
+          <div style="margin-top:10px;">
+            <div class="quest-log-item">
+              <div class="icon">📅</div>
+              <div>
+                <div class="key">QUEST TIME</div>
+                <div class="val">2026/10/??? 11:00 開始入座</div>
+              </div>
+            </div>
+            <div class="quest-log-item">
+              <div class="icon">📍</div>
+              <div>
+                <div class="key">QUEST DUNGEON</div>
+                <div class="val">迪宅DeeJai Bistro<br>台北市大同區迪化街一段318號</div>
+              </div>
+            </div>
+            <div class="quest-log-item">
+              <div class="icon">💰</div>
+              <div>
+                <div class="key">REWARD</div>
+                <div class="val">EXP +9999<br>好感度 MAX ❤️</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- RIGHT: RSVP Form -->
+      <div style="position:relative;display:flex;flex-direction:column;">
+        <div id="rsvp-form" class="panel panel-gold" style="padding:14px;position:relative;flex:1;">
+          <div class="panel-label">⚔️ PARTY COMMANDS</div>
+          <div id="damage-container" style="position:absolute;inset:0;pointer-events:none;overflow:hidden;z-index:20;"></div>
+
+          <div style="margin-top:10px;">
+            <div style="margin-bottom:14px;">
+              <label class="form-label">👤 Adventurer Name</label>
+              <div class="input-wrap">
+                <span class="input-prefix">▶</span>
+                <input type="text" id="name-input" class="rpg-input" placeholder="輸入冒險者名字..." oninput="onNameInput(this.value)" maxlength="20">
+              </div>
+            </div>
+
+            <div style="margin-bottom:14px;">
+              <label class="form-label">⚔️ Select Action</label>
+              <div class="attend-btns">
+                <button id="btn-yes" class="attend-btn yes" onclick="selectAttend('yes')">⚔️ 接受挑戰</button>
+                <button id="btn-no" class="attend-btn no" onclick="selectAttend('no')">🛡️ 暫時撤退</button>
+              </div>
+            </div>
+
+            <div style="margin-bottom:14px;">
+              <label class="form-label">💬 Battle Cry (選填)</label>
+              <textarea id="msg-input" class="rpg-textarea" rows="2" placeholder="留下你的登場台詞..."></textarea>
+            </div>
+
+            <div style="margin-bottom:14px;">
+              <div class="party-box">
+                <div id="rsvp-avatar-wrap"><canvas id="rsvp-canvas" width="32" height="32"></canvas></div>
+                <div class="party-info">
+                  <div class="name" id="party-name">冒險者</div>
+                  <div class="title" id="party-title">【傳奇見習生】</div>
+                </div>
+                <div style="margin-left:auto;text-align:right;font-size:8px;line-height:2;">
+                  <div><span class="text-red">HP</span> <span id="party-hp" class="text-white">100</span>/100</div>
+                  <div><span class="text-cyan">MP</span> <span id="party-mp" class="text-white">99</span>/99</div>
+                </div>
+              </div>
+            </div>
+
+            <button id="submit-btn" onclick="submitRSVP()" class="btn btn-gold" style="width:100%;padding:14px;font-size:10px;" disabled>★ 發送作戰計畫 ★</button>
+            <p id="error-msg" style="display:none;text-align:center;font-size:8px;color:var(--red);margin-top:10px;animation:blink 0.8s step-end infinite;"></p>
+          </div>
+        </div>
+
+        <!-- Success View -->
+        <div id="success-view" class="panel">
+          <div class="level-up-banner float-anim">🏆 LEVEL UP! 🏆</div>
+          <div class="victory-star">⭐</div>
+          <div style="font-size:11px;color:var(--gold);margin:12px 0;letter-spacing:2px;text-shadow:1px 1px 0 #000;position:relative;z-index:5;">🎉 QUEST COMPLETED! 🎉</div>
+          <div style="font-size:32px;color:var(--white);text-shadow:2px 2px 0 #000;margin:12px 0;animation:float 2s ease-in-out infinite;position:relative;z-index:5;">EXP +9999</div>
+          <div class="panel" style="padding:14px;max-width:360px;margin:0 auto 14px;background:rgba(0,0,0,0.6);position:relative;z-index:5;">
+            <p id="success-text" style="font-size:9px;color:var(--green);line-height:1.9;margin-bottom:6px;"></p>
+            <p style="font-size:7px;color:var(--white);">✓ 回覆已傳送至試算表大廳</p>
+          </div>
+          <p style="font-size:9px;color:var(--gold);letter-spacing:1px;text-shadow:1px 1px 0 #000;position:relative;z-index:5;">【 勇者，我們敘舊時見！】</p>
+          <button class="btn btn-dark" onclick="resetAdventure()" style="margin-top:20px;position:relative;z-index:5;">◀ 返回酒館重新登記</button>
+        </div>
+      </div>
+    </div>
+    <div class="page-footer">▲ 回覆將自動寫入 Google Sheets ▲</div>
   </div>
 
-  <script>
-    // --- 8-Bit 音效合成器 (Web Audio API) ---
-    const AudioEngine = {
-      ctx: null,
+</div><!-- #app -->
 
-      init() {
-        if (!this.ctx) {
-          this.ctx = new (window.AudioContext || window.webkitAudioContext)();
-        }
-      },
+<script>
+/* ================================================================
+   CONFIG — Google Apps Script URL
+   ================================================================ */
+const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyYuTmvx2DVKGqNQApn3SvXP2A5Sw-7n0ml9pocrHBrsz26rzVG64nkk5VPbHs_ZG6x/exec";
 
-      // 打字時的嘟嘟聲
-      playBlip() {
-        try {
-          this.init();
-          const now = this.ctx.currentTime;
-          const osc = this.ctx.createOscillator();
-          const gain = this.ctx.createGain();
+/* ================================================================
+   TITLE SCREEN
+   ================================================================ */
+(function() {
+  const canvas = document.getElementById('title-canvas');
+  const ctx = canvas.getContext('2d');
+  const W = 320, H = 180;
+  let stars = Array.from({length:60}, () => ({ x: Math.random()*W, y: Math.random()*H, s: Math.random()*2+0.5, b: Math.random() }));
+  let castleFrame = 0;
 
-          osc.type = 'triangle';
-          osc.frequency.setValueAtTime(450 + Math.random() * 80, now);
+  function drawTitle() {
+    ctx.fillStyle = '#000010';
+    ctx.fillRect(0, 0, W, H);
 
-          gain.gain.setValueAtTime(0.04, now);
-          gain.gain.exponentialRampToValueAtTime(0.01, now + 0.05);
-
-          osc.connect(gain);
-          gain.connect(this.ctx.destination);
-          osc.start(now);
-          osc.stop(now + 0.06);
-        } catch (e) {}
-      },
-
-      // 游標選單點擊音
-      playSelect() {
-        try {
-          this.init();
-          const now = this.ctx.currentTime;
-          const osc = this.ctx.createOscillator();
-          const gain = this.ctx.createGain();
-
-          osc.type = 'square';
-          osc.frequency.setValueAtTime(350, now);
-          osc.frequency.setValueAtTime(550, now + 0.06);
-
-          gain.gain.setValueAtTime(0.08, now);
-          gain.gain.exponentialRampToValueAtTime(0.01, now + 0.12);
-
-          osc.connect(gain);
-          gain.connect(this.ctx.destination);
-          osc.start(now);
-          osc.stop(now + 0.14);
-        } catch (e) {}
-      },
-
-      // 金幣獲得聲 / 獲得好感度
-      playCoin() {
-        try {
-          this.init();
-          const now = this.ctx.currentTime;
-          const osc = this.ctx.createOscillator();
-          const gain = this.ctx.createGain();
-
-          osc.type = 'square';
-          osc.frequency.setValueAtTime(987.77, now); // B5 note
-          osc.frequency.setValueAtTime(1318.51, now + 0.08); // E6 note
-
-          gain.gain.setValueAtTime(0.07, now);
-          gain.gain.exponentialRampToValueAtTime(0.005, now + 0.35);
-
-          osc.connect(gain);
-          gain.connect(this.ctx.destination);
-          osc.start(now);
-          osc.stop(now + 0.35);
-        } catch (e) {}
-      },
-
-      // 退回/驚嚇音效
-      playSigh() {
-        try {
-          this.init();
-          const now = this.ctx.currentTime;
-          const osc = this.ctx.createOscillator();
-          const gain = this.ctx.createGain();
-
-          osc.type = 'sawtooth';
-          osc.frequency.setValueAtTime(200, now);
-          osc.frequency.linearRampToValueAtTime(120, now + 0.3);
-
-          gain.gain.setValueAtTime(0.08, now);
-          gain.gain.exponentialRampToValueAtTime(0.01, now + 0.35);
-
-          osc.connect(gain);
-          gain.connect(this.ctx.destination);
-          osc.start(now);
-          osc.stop(now + 0.35);
-        } catch (e) {}
-      },
-
-      // 進入傳送/打開大門音效
-      playEnterPortal() {
-        try {
-          this.init();
-          const now = this.ctx.currentTime;
-          
-          const notes = [261.6, 329.6, 392.0, 523.3, 659.3, 784.0, 1046.5];
-          notes.forEach((freq, idx) => {
-            const osc = this.ctx.createOscillator();
-            const gain = this.ctx.createGain();
-            const startTime = now + idx * 0.06;
-
-            osc.type = 'sine';
-            osc.frequency.setValueAtTime(freq, startTime);
-            osc.frequency.exponentialRampToValueAtTime(freq * 1.5, startTime + 0.2);
-
-            gain.gain.setValueAtTime(0.08, startTime);
-            gain.gain.exponentialRampToValueAtTime(0.01, startTime + 0.25);
-
-            osc.connect(gain);
-            gain.connect(this.ctx.destination);
-            osc.start(startTime);
-            osc.stop(startTime + 0.3);
-          });
-        } catch (e) {}
-      },
-
-      // 乾杯音效
-      playCheers() {
-        try {
-          this.init();
-          const now = this.ctx.currentTime;
-          const osc1 = this.ctx.createOscillator();
-          const osc2 = this.ctx.createOscillator();
-          const gain = this.ctx.createGain();
-
-          osc1.type = 'sine';
-          osc1.frequency.setValueAtTime(880, now);
-          osc1.frequency.linearRampToValueAtTime(660, now + 0.1);
-
-          osc2.type = 'triangle';
-          osc2.frequency.setValueAtTime(1200, now);
-          osc2.frequency.linearRampToValueAtTime(800, now + 0.1);
-
-          gain.gain.setValueAtTime(0.1, now);
-          gain.gain.exponentialRampToValueAtTime(0.01, now + 0.15);
-
-          osc1.connect(gain);
-          osc2.connect(gain);
-          gain.connect(this.ctx.destination);
-
-          osc1.start(now);
-          osc1.stop(now + 0.15);
-          osc2.start(now);
-          osc2.stop(now + 0.15);
-        } catch (e) {}
-      },
-
-      // 魯特琴彈奏音效
-      playLute() {
-        try {
-          this.init();
-          const now = this.ctx.currentTime;
-          const notes = [293.66, 349.23, 440.00, 587.33]; // Dm 經典和弦
-          notes.forEach((freq, idx) => {
-            const osc = this.ctx.createOscillator();
-            const gain = this.ctx.createGain();
-            const start = now + (idx * 0.05);
-
-            osc.type = 'triangle';
-            osc.frequency.setValueAtTime(freq, start);
-
-            gain.gain.setValueAtTime(0.06, start);
-            gain.gain.exponentialRampToValueAtTime(0.01, start + 0.25);
-
-            osc.connect(gain);
-            gain.connect(this.ctx.destination);
-            osc.start(start);
-            osc.stop(start + 0.25);
-          });
-        } catch (e) {}
-      }
-    };
-
-    // --- JRPG 劇本與隨機八卦設定 ---
-    const script = {
-      welcome: "「歡迎光臨迪宅酒館！我是這裡的掌櫃 Abus。這裡聚集了各路頂尖的冒險者... 嗯？你身上有一封泛著金色微光的『同學會邀請函』？天啊，你就是大家在等的那位老勇者嗎？」",
-      aboutQuest: "「這可是時隔多年的史詩限定戰役！據說，我們將在『2026/10/?? 11:00』於『迪宅DeeJai Bistro』會合，共同討伐名為『同學會』的史詩級副本！快填寫你的 RSVP 作戰書吧，大家都在等著你呢！」",
-      leaveWarning: "「哎呀，別走啊！外面夜深怪多，不如進來喝一杯，跟老夥伴們重組工會吧！」",
-      
-      // 隨機酒館傳聞秘密 (當勇者請 Abus 喝一杯時)
-      rumors: [
-        "「（咕嚕咕嚕...哈啊！）真是杯好酒！偷偷告訴你一個秘密，聽說當年坐我們最後一排常被老師罰站的那個人，現在已經成為大企業主管了喔！」",
-        "「（擦拭酒杯）好喝！透露你一個情報，據占星術推算，這次同學會聚餐好像有人準備了超驚豔的隱藏大禮唷！」",
-        "「哎呀～真大方！看在你的誠意份上，我聽說這次聚會點『迪宅Bistro』的地牢深處，老闆好像特別準備了非常厲害的私房開胃菜喔！」",
-        "「謝啦勇者！悄悄告訴你，聽說這次有幾位十幾年沒出現過、只存在於傳說中的神祕大咖級同學，這次也決定要驚喜現身了！」"
-      ],
-
-      // 點擊酒館內 NPC 的彩蛋對話
-      patrons: {
-        keeper: { name: "女掌櫃 Abus", msg: "「想要打聽任務情報？請我喝杯黑麥汁，或者在右側遞上你的作戰計畫書，我就帶你進入大廳！」" },
-        cards: { name: "牌王 半獸人", msg: "「別吵！這局我的勝率有 99%！贏了我就能包下十月份同學會的所有酒錢！」" },
-        music: { name: "吟遊詩人 傑克", msg: "「拉拉拉～🎵 手中酒杯舉起來！2026 年的相聚，一首傳奇史詩即將拉開序幕！乾杯！」" },
-        raid: { name: "刺客 德古拉", msg: "「哼... 據傳 2026/10 迪化街地城將會開啟，我得先調查好迪宅Bistro的防禦薄弱處...（筆記）」" },
-        magic: { name: "賢者 甘道夫", msg: "「我正在用占星術推算『2026/10/??』這個神祕問號背後的精確天象... 看來是個適合狂歡的吉日！」" }
-      }
-    };
-
-    let typingTimer = null;
-    let isTyping = false;
-    let currentRumorIndex = 0;
-
-    function typeMessage(speaker, text, callback) {
-      clearInterval(typingTimer);
-      isTyping = true;
-      
-      const speakerEl = document.getElementById('speaker-name');
-      const displayEl = document.getElementById('dialog-text');
-      const nextIndicator = document.getElementById('next-indicator');
-      const choicesContainer = document.getElementById('choices-container');
-      
-      speakerEl.textContent = speaker;
-      displayEl.innerHTML = "";
-      nextIndicator.style.display = "none";
-      choicesContainer.style.visibility = "hidden";
-
-      let index = 0;
-      
-      typingTimer = setInterval(() => {
-        if (index < text.length) {
-          const char = text[index];
-          displayEl.innerHTML += char;
-          index++;
-          
-          // 每打兩個字發出一次經典 8-Bit 嗶嗶語音音效
-          if (index % 2 === 0) {
-            AudioEngine.playBlip();
-          }
-        } else {
-          clearInterval(typingTimer);
-          isTyping = false;
-          displayEl.innerHTML += `<span class="dialog-cursor"></span>`;
-          nextIndicator.style.display = "inline-block";
-          choicesContainer.style.visibility = "visible";
-          if (callback) callback();
-        }
-      }, 40); // 順暢舒適的打字速度
-    }
-
-    // --- 漂浮好感度特效特效 ---
-    function spawnFavorEffect() {
-      const container = document.getElementById('favor-container');
-      const text = document.createElement('div');
-      text.className = `absolute text-xs font-black favor-text pointer-events-none z-30 flex items-center gap-1`;
-      text.style.color = '#f43f5e'; // 浪漫粉紅色
-      text.innerHTML = `❤️ 好感度 +999 ❤️`;
-      
-      // 定位在吧台女掌櫃 Abus 的上方
-      text.style.left = '45%';
-      text.style.top = '10%';
-      
-      container.appendChild(text);
-      setTimeout(() => text.remove(), 1200);
-    }
-
-    // --- 點擊酒館 NPC 事件處理 ---
-    function triggerPatron(id) {
-      const p = script.patrons[id];
-      if (!p) return;
-
-      // 播放專屬音效
-      if (id === 'music') {
-        AudioEngine.playLute();
-      } else if (id === 'cards' || id === 'raid') {
-        AudioEngine.playSelect();
-      } else {
-        AudioEngine.playCheers();
-      }
-
-      // 對話框大打字
-      typeMessage(p.name, p.msg);
-
-      // 顯示地圖上的動態對話小氣泡
-      const bubble = document.getElementById('patron-bubble');
-      bubble.textContent = `【${p.name}】: ${p.msg.substring(1, 25)}...`;
-      bubble.classList.remove('hidden');
-      
-      setTimeout(() => {
-        bubble.classList.add('hidden');
-      }, 4000);
-    }
-
-    // --- 勇者指令點擊回饋處理 ---
-    function handleChoice(action) {
-      if (isTyping) return; // 說話時禁止重複觸發
-
-      if (action === 'enter') {
-        AudioEngine.playEnterPortal();
-        
-        // JRPG 經典轉場淡出動畫
-        const appEl = document.getElementById('portal-app');
-        appEl.classList.add('fade-out');
-
-        // 延遲轉址，讓傳送琶音與淡出效果完整釋放
-        setTimeout(() => {
-          window.location.href = "rpg_reunion_rsvp.html";
-        }, 850);
-
-      } else if (action === 'info') {
-        AudioEngine.playSelect();
-        typeMessage("女掌櫃 Abus", script.aboutQuest);
-
-      } else if (action === 'drink') {
-        // 播放驚喜金幣音效與乾杯音效
-        AudioEngine.playCoin();
-        setTimeout(() => {
-          AudioEngine.playCheers();
-        }, 150);
-
-        // 觸發漂浮好感度特效
-        spawnFavorEffect();
-
-        // 隨機切換傳聞八卦並印出對話
-        const rumorText = script.rumors[currentRumorIndex];
-        currentRumorIndex = (currentRumorIndex + 1) % script.rumors.length;
-
-        typeMessage("女掌櫃 Abus", rumorText);
-
-      } else if (action === 'leave') {
-        AudioEngine.playSigh();
-        typeMessage("女掌櫃 Abus", script.leaveWarning);
-      }
-    }
-
-    // 點擊頁面任何地方先啟用瀏覽器音訊上下文 (AudioContext Policy)
-    document.addEventListener('click', () => {
-      AudioEngine.init();
-    }, { once: true });
-
-    // 初始化開始打字
-    window.addEventListener('DOMContentLoaded', () => {
-      setTimeout(() => {
-        typeMessage("女掌櫃 Abus", script.welcome);
-      }, 500);
+    // Stars
+    stars.forEach(s => {
+      s.b += 0.02;
+      const alpha = (Math.sin(s.b) * 0.4 + 0.6);
+      ctx.fillStyle = `rgba(255,255,255,${alpha})`;
+      ctx.fillRect(Math.floor(s.x), Math.floor(s.y), Math.ceil(s.s), Math.ceil(s.s));
     });
-  </script>
+
+    // Mountains silhouette
+    ctx.fillStyle = '#0a0a1a';
+    ctx.beginPath();
+    ctx.moveTo(0, H);
+    ctx.lineTo(30, 90); ctx.lineTo(60, 110); ctx.lineTo(90, 70); ctx.lineTo(130, 100);
+    ctx.lineTo(160, 60); ctx.lineTo(200, 95); ctx.lineTo(240, 55); ctx.lineTo(280, 80);
+    ctx.lineTo(320, 65); ctx.lineTo(320, H); ctx.closePath();
+    ctx.fill();
+
+    // Pixel castle
+    castleFrame++;
+    const cx = 128, cy = 90;
+    ctx.fillStyle = '#1e1e3a';
+    // Body
+    ctx.fillRect(cx+8, cy+16, 48, 40);
+    // Towers
+    ctx.fillRect(cx+2, cy+8, 18, 48);
+    ctx.fillRect(cx+44, cy+8, 18, 48);
+    // Battlements
+    for(let i=0;i<3;i++) { ctx.fillRect(cx+4+i*6, cy+4, 4, 6); ctx.fillRect(cx+46+i*6, cy+4, 4, 6); }
+    for(let i=0;i<4;i++) { ctx.fillRect(cx+10+i*8, cy+12, 4, 6); }
+    // Gate
+    ctx.fillStyle = '#000';
+    ctx.fillRect(cx+20, cy+36, 24, 20);
+    // Windows glow
+    const glow = Math.sin(castleFrame*0.05)*0.3+0.7;
+    ctx.fillStyle = `rgba(250,204,21,${glow})`;
+    ctx.fillRect(cx+6, cy+16, 6, 6); ctx.fillRect(cx+52, cy+16, 6, 6);
+    ctx.fillRect(cx+6, cy+28, 6, 6); ctx.fillRect(cx+52, cy+28, 6, 6);
+    // Flag
+    ctx.fillStyle = '#ef4444';
+    ctx.fillRect(cx+16, cy, 2, 10);
+    ctx.fillRect(cx+18, cy+1, 8, 6);
+
+    // Moon
+    ctx.fillStyle = '#fffde7';
+    ctx.beginPath(); ctx.arc(W-40, 30, 14, 0, Math.PI*2); ctx.fill();
+    ctx.fillStyle = '#000010';
+    ctx.beginPath(); ctx.arc(W-36, 27, 12, 0, Math.PI*2); ctx.fill();
+
+    requestAnimationFrame(drawTitle);
+  }
+  requestAnimationFrame(drawTitle);
+
+  function startGame() {
+    Audio8.init();
+    Audio8.confirm();
+    document.getElementById('title-screen').classList.add('hidden');
+    document.getElementById('app').style.display = 'flex';
+    setTimeout(() => triggerPatron('keeper'), 400);
+    spawnMonsterAfterDelay();
+  }
+
+  document.getElementById('title-screen').addEventListener('click', startGame);
+  document.addEventListener('keydown', function handler(e) {
+    startGame();
+    document.removeEventListener('keydown', handler);
+  });
+})();
+
+/* ================================================================
+   ANIMATED BACKGROUND (Sky + Pixel Clouds)
+   ================================================================ */
+(function() {
+  const canvas = document.getElementById('bg-canvas');
+  const ctx = canvas.getContext('2d');
+  let W, H, clouds = [], birds = [];
+
+  function resize() {
+    W = canvas.width = window.innerWidth;
+    H = canvas.height = window.innerHeight;
+  }
+  function makeClouds() {
+    clouds = Array.from({length: 8}, () => ({
+      x: Math.random() * W, y: Math.random() * (H * 0.5),
+      w: 60 + Math.random() * 120, h: 28 + Math.random() * 36, speed: 0.1 + Math.random() * 0.25
+    }));
+    birds = Array.from({length: 5}, () => ({
+      x: Math.random() * W, y: 30 + Math.random() * (H * 0.3),
+      speed: 0.4 + Math.random() * 0.8, frame: Math.floor(Math.random()*4)
+    }));
+  }
+  function draw() {
+    ctx.clearRect(0, 0, W, H);
+    ctx.fillStyle = 'rgba(255,255,255,0.82)';
+    clouds.forEach(c => {
+      c.x -= c.speed;
+      if (c.x < -c.w - 20) { c.x = W + 20; c.y = Math.random() * (H * 0.5); }
+      const r = Math.min(c.h/2, 18);
+      ctx.beginPath();
+      ctx.roundRect ? ctx.roundRect(c.x, c.y, c.w, c.h, r) : ctx.rect(c.x, c.y, c.w, c.h);
+      ctx.fill();
+      ctx.fillRect(c.x+10, c.y-10, c.w-20, c.h+14);
+      ctx.fillRect(c.x+20, c.y-20, c.w-40, c.h+24);
+    });
+    // Pixel birds
+    ctx.fillStyle = '#1e293b';
+    birds.forEach(b => {
+      b.x -= b.speed; b.frame = (b.frame + 0.05) | 0;
+      if (b.x < -20) { b.x = W + 10; b.y = 30 + Math.random() * (H*0.3); }
+      const wing = Math.sin(Date.now()*0.004 + b.x) > 0 ? -2 : 2;
+      ctx.fillRect(b.x, b.y, 4, 2);
+      ctx.fillRect(b.x-4, b.y+wing, 4, 2);
+      ctx.fillRect(b.x+4, b.y+wing, 4, 2);
+    });
+    requestAnimationFrame(draw);
+  }
+  window.addEventListener('resize', () => { resize(); makeClouds(); });
+  resize(); makeClouds(); requestAnimationFrame(draw);
+})();
+
+/* ================================================================
+   AUDIO ENGINE
+   ================================================================ */
+const Audio8 = {
+  ctx: null,
+  init() { if (!this.ctx) this.ctx = new (window.AudioContext || window.webkitAudioContext)(); },
+  _note(freq, type, dur, vol=0.18, delay=0) {
+    try {
+      this.init();
+      const c = this.ctx, now = c.currentTime + delay;
+      const o = c.createOscillator(), g = c.createGain();
+      o.type = type; o.frequency.value = freq;
+      g.gain.setValueAtTime(vol, now);
+      g.gain.exponentialRampToValueAtTime(0.001, now + dur);
+      o.connect(g); g.connect(c.destination);
+      o.start(now); o.stop(now + dur);
+    } catch(e) {}
+  },
+  select()  { this._note(660, 'triangle', 0.08); },
+  hover()   { this._note(440, 'triangle', 0.05, 0.06); },
+  confirm() { this._note(523, 'square', 0.12); this._note(784, 'square', 0.12, 0.15, 0.08); },
+  error()   { this._note(180, 'sawtooth', 0.25, 0.2); },
+  hit()     { this._note(100, 'sawtooth', 0.15, 0.22); },
+  victory() { [261,329,392,523,659,784,1046].forEach((f,i) => this._note(f,'square',0.18,0.15,i*0.08)); },
+  cursor()  { this._note(330, 'triangle', 0.04, 0.05); },
+  typed()   { if (Math.random() < 0.3) this._note(440+Math.random()*200, 'triangle', 0.03, 0.04); },
+  levelup() { [523,659,784,1046,1318].forEach((f,i) => this._note(f,'square',0.2,0.2,i*0.07)); },
+  chest()   { [660,880,1100].forEach((f,i) => this._note(f,'triangle',0.3,0.22,i*0.1)); },
+  battle()  { this._note(110,'sawtooth',0.4,0.3); this._note(82,'sawtooth',0.4,0.25,0.1); },
+  secret()  { [330,440,550,660,880,1100,1320].forEach((f,i) => this._note(f,'triangle',0.25,0.2,i*0.06)); },
+  dice()    { this._note(300+Math.random()*300,'square',0.1,0.15); },
+};
+document.addEventListener('click', () => Audio8.init(), { once: true });
+
+/* ================================================================
+   SCREEN SWITCHER
+   ================================================================ */
+let currentScreen = 'home';
+function switchScreen(name) {
+  if (name === currentScreen) return;
+  Audio8.confirm();
+  const overlay = document.getElementById('transition-overlay');
+  const bar = document.getElementById('transition-bar');
+  const txt = document.getElementById('transition-text');
+  const labels = { home:'酒館大廳...', creator:'捏臉系統...', rsvp:'作戰計畫...' };
+  txt.textContent = labels[name] || 'LOADING...';
+  overlay.classList.add('active'); bar.style.width = '0%';
+  setTimeout(() => { bar.style.width = '85%'; }, 50);
+  setTimeout(() => {
+    bar.style.width = '100%';
+    setTimeout(() => {
+      document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+      document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+      document.getElementById('screen-'+name).classList.add('active');
+      document.getElementById('tab-'+name).classList.add('active');
+      currentScreen = name;
+      if (name === 'rsvp') syncAvatarToRsvp();
+      if (name === 'creator') { document.getElementById('char-name').value = avatar.name || ''; drawAvatar(); }
+      overlay.classList.remove('active'); bar.style.width = '0%';
+    }, 250);
+  }, 600);
+}
+
+/* ================================================================
+   AVATAR STATE & DRAWING
+   ================================================================ */
+const avatar = {
+  name: '', title: '勇者', skin: '#ffe5cc',
+  hairStyle: 'straight', hairColor: '#f97316',
+  outfit: 'warrior', eyes: 'normal', accessory: 'sword',
+  stats: { hp:70, mp:50, atk:60, spd:45 }
+};
+try { const s = JSON.parse(localStorage.getItem('deejai_v5')); if(s) Object.assign(avatar, s); } catch(e) {}
+
+function saveAvatar() {
+  try { localStorage.setItem('deejai_v5', JSON.stringify(avatar)); } catch(e) {}
+  document.getElementById('hud-name').textContent = avatar.name || '（未登記）';
+  document.getElementById('hud-title').textContent = '【' + (avatar.title || '傳奇見習生') + '】';
+}
+
+function setOpt(key, val, el) {
+  Audio8.select();
+  avatar[key] = val; saveAvatar();
+  el.parentElement.querySelectorAll('.opt-btn').forEach(b => b.classList.remove('selected'));
+  el.classList.add('selected'); drawAvatar();
+}
+function selectTitle(el, t) {
+  Audio8.select(); avatar.title = t; saveAvatar();
+  document.querySelectorAll('.title-chip').forEach(c => c.classList.remove('selected'));
+  el.classList.add('selected');
+}
+function selectSecretTitle(el) {
+  Audio8.secret();
+  avatar.title = el.textContent; saveAvatar();
+  document.querySelectorAll('.title-chip').forEach(c => c.classList.remove('selected'));
+  el.classList.add('selected');
+  spawnGlobalFloat('✨ 稀有稱號裝備！', '#a855f7');
+}
+function rollStats() {
+  Audio8.confirm();
+  const dice = document.getElementById('roll-dice');
+  let i = 0;
+  const interval = setInterval(() => {
+    dice.textContent = ['🎲','🎯','✨','⚡','🌟'][i%5]; i++;
+    avatar.stats = { hp:20+Math.floor(Math.random()*80), mp:10+Math.floor(Math.random()*90), atk:10+Math.floor(Math.random()*90), spd:10+Math.floor(Math.random()*90) };
+    updateStatBars();
+    if (i > 10) { clearInterval(interval); dice.textContent = '🎲'; saveAvatar(); }
+  }, 80);
+}
+function updateStatBars() {
+  ['hp','mp','atk','spd'].forEach(k => {
+    const v = avatar.stats[k] || 50;
+    const el = document.getElementById('stat-'+k);
+    const vl = document.getElementById('stat-'+k+'-val');
+    if(el) el.style.width = v+'%'; if(vl) vl.textContent = v;
+  });
+}
+function drawAvatar(canvasId = 'creator-canvas') {
+  const canvas = document.getElementById(canvasId); if(!canvas) return;
+  const ctx = canvas.getContext('2d'); ctx.clearRect(0,0,32,32);
+  const { skin, hairColor, hairStyle, outfit, eyes, accessory } = avatar;
+  const px = (x,y,w,h,c) => { ctx.fillStyle=c; ctx.fillRect(x,y,w,h); };
+  const bodyColors = { warrior:'#c0c8d8', mage:'#2a8040', witch:'#1a2880', skeleton:'#e8e8e8' };
+  const bodyC = bodyColors[outfit] || '#c0c8d8';
+  px(11,22,4,8,outfit==='skeleton'?'#ddd':'#3060a0'); px(17,22,4,8,outfit==='skeleton'?'#ddd':'#3060a0');
+  px(10,28,5,4,'#1a1a1a'); px(17,28,5,4,'#1a1a1a');
+  px(7,14,4,9,outfit==='skeleton'?'#ddd':skin); px(21,14,4,9,outfit==='skeleton'?'#ddd':skin);
+  px(11,14,10,10,bodyC);
+  if(outfit==='warrior') { px(13,17,6,3,'#8090a0'); px(11,22,10,2,'#facc15'); }
+  else if(outfit==='mage') { px(11,20,10,2,'#c8a020'); }
+  else if(outfit==='witch') { px(12,16,8,4,'#ffffff'); px(11,24,10,2,'#a855f7'); }
+  const headC = outfit==='skeleton'?'#f8fafc':skin;
+  px(10,7,12,11,headC);
+  if(outfit!=='skeleton') { px(10,13,2,2,'#f43f5e'); px(20,13,2,2,'#f43f5e'); }
+  if(outfit==='skeleton') { px(13,10,2,2,'#ef4444'); px(18,10,2,2,'#ef4444'); px(12,15,2,2,'#111'); px(15,15,2,2,'#111'); px(18,15,2,2,'#111'); }
+  else if(eyes==='normal') { px(13,10,2,3,'#111'); px(18,10,2,3,'#111'); px(13,10,1,1,'#fff'); px(18,10,1,1,'#fff'); }
+  else if(eyes==='tsundere') { px(13,10,2,2,'#111'); px(18,10,2,2,'#111'); px(12,8,4,1,'#111'); px(17,8,4,1,'#111'); }
+  else if(eyes==='closed') { px(12,12,4,1,'#111'); px(17,12,4,1,'#111'); }
+  else if(eyes==='red') { px(13,10,2,2,'#ef4444'); px(18,10,2,2,'#ef4444'); px(13,10,1,1,'#fff'); px(18,10,1,1,'#fff'); }
+  if(outfit!=='skeleton') px(14,15,4,1,'#111');
+  const hC = hairColor;
+  if(outfit!=='skeleton') {
+    if(hairStyle==='straight'||hairStyle==='twintails') {
+      px(10,4,12,4,hC); px(9,6,2,6,hC); px(21,6,2,6,hC);
+      if(hairStyle==='twintails') { px(7,12,3,5,hC); px(22,12,3,5,hC); }
+    } else if(hairStyle==='spiky') {
+      px(10,4,12,4,hC); px(10,2,2,3,hC); px(14,1,4,4,hC); px(20,2,2,3,hC);
+      px(9,6,2,5,hC); px(21,6,2,5,hC); px(10,8,12,2,'#0284c7');
+    } else if(hairStyle==='hat') {
+      px(10,7,12,2,hC);
+      const hH = outfit==='witch'?'#1e3a8a':'#14532d';
+      px(6,6,20,2,hH); px(9,3,14,4,hH); px(11,0,10,4,hH); px(9,5,14,1,'#facc15');
+    }
+  }
+  if(accessory==='sword') { px(4,6,2,13,'#e2e8f0'); px(3,18,4,2,'#facc15'); px(4,20,2,4,'#78350f'); }
+  else if(accessory==='staff') { px(5,4,1,20,'#78350f'); px(3,2,5,3,'#22c55e'); px(4,1,3,1,'#22c55e'); }
+  else if(accessory==='shield') { px(22,13,7,8,'#facc15'); px(24,15,3,4,'#fef08a'); px(25,16,1,2,'#fff'); }
+  else if(accessory==='broom') { px(22,18,2,10,'#78350f'); px(20,26,6,5,'#ca8a04'); px(21,24,4,3,'#a16207'); }
+}
+function initOptButtons() {
+  const groups = { 'opt-skin':'skin','opt-hair':'hairStyle','opt-hairColor':'hairColor','opt-outfit':'outfit','opt-eyes':'eyes','opt-accessory':'accessory' };
+  Object.entries(groups).forEach(([groupId, key]) => {
+    const grp = document.getElementById(groupId); if(!grp) return;
+    grp.querySelectorAll('.opt-btn').forEach(btn => {
+      const match = (btn.getAttribute('onclick')||'').match(/setOpt\('[^']+','([^']+)'/);
+      if(match && match[1]===avatar[key]) { grp.querySelectorAll('.opt-btn').forEach(b=>b.classList.remove('selected')); btn.classList.add('selected'); }
+    });
+  });
+  document.querySelectorAll('.title-chip').forEach(c => c.classList.toggle('selected', c.textContent.trim()===avatar.title));
+}
+initOptButtons();
+
+function saveAndGoRsvp() { Audio8.confirm(); saveAvatar(); switchScreen('rsvp'); }
+function syncAvatarToRsvp() {
+  drawAvatar('rsvp-canvas');
+  document.getElementById('party-name').textContent = avatar.name || '冒險者';
+  document.getElementById('party-title').textContent = '【' + (avatar.title||'傳奇見習生') + '】';
+  document.getElementById('party-hp').textContent = avatar.stats.hp;
+  document.getElementById('party-mp').textContent = avatar.stats.mp;
+  if(avatar.name) { const ni=document.getElementById('name-input'); if(!ni.value) ni.value=avatar.name; onNameInput(avatar.name); }
+}
+
+/* ================================================================
+   PATRON DIALOG SYSTEM
+   ================================================================ */
+const DIALOGS = {
+  keeper: { name:'女掌櫃 Abus', lines:['歡迎來到迪宅酒館！你的臉……怎麼像素化了？','2026 年的同學會，這次我們要用 RPG 模式回味青春！','先建立你的像素角色，再填寫邀請函！還有……聽說某個寶箱裡有秘密……'] },
+  cards:  { name:'牌桌老賭徒', lines:['喂！別靠近，這局我快贏了！','去試試骰子小遊戲，連贏三次可能有驚喜……'] },
+  music:  { name:'皇家樂手', lines:['🎸 當年我們在學校走廊練的那首歌……','這次同學會，帶你的好聲音來！'] },
+  raid:   { name:'夜行刺客', lines:['「噓... 聽說這次迪宅防禦很弱...」','「我們打算從後門潛入，把好酒全都搬光！」'] },
+  magic:  { name:'賢者 甘道夫', lines:['「我正在解譯這張古老的星象圖...」','「星象顯示 2026/10 會有大量勇者聚集在大同區。」','「而且……傳說中輸入 Konami Code 可召喚隱藏 Boss……」'] },
+  drinkers:{ name:'龍裔戰士', lines:['「嗝... 再來一杯黑麥汁！」','「當年誰喝得過我？這次同學會我絕對要拿冠軍！」'] },
+  elves:  { name:'精靈遊俠', lines:['「我們從遙遠的森林跋涉而來...」','「聽說這裡有傳說中的同學會？希望餐點符合精靈胃口。」'] },
+  gigi:   { name:'歷史官 Gigi', lines:['我是此次遠征的記錄官 Gigi。','你的 RSVP 將會即時同步到我的神聖試算表大廳——','快去填寫你的作戰計畫，我靜待佳音！'] },
+  chest_common: { name:'寶箱精靈', lines:['✨ 恭喜！你找到了普通寶箱！','裡面有 50 金幣和一塊過期乾糧……','下次換個好手氣吧！'] },
+  chest_rare:   { name:'寶箱精靈', lines:['💎 稀有！金光閃閃的寶箱！','你獲得了「酒館常客」稱號！','快去角色頁面查看！'] },
+  chest_ultra:  { name:'寶箱精靈', lines:['🌟🌟🌟 ULTRA RARE!!!','傳說級寶箱!!!','「宇宙第一勇者」稱號已解鎖——記得去角色頁面裝備！'] },
+  abus_angry: { name:'女掌櫃 Abus', lines:['喂！你已經戳我第五次了！', '再戳……再戳我就不歡迎你了，哼！'] },
+  abus_special: { name:'女掌櫃 Abus ✨', lines:['……好吧你贏了。', '你發現了我的秘密：其實我是這個世界的主程式設計師。', '密碼：DEEJAI2026 ★ 下次同學會用餐享 5% 折扣！（可能是假的）'] }
+};
+
+let typeTimeout = null;
+let currentTypewriterLines = null;
+let currentLineIdx = 0;
+let isTyping = false;
+
+function skipTypewriter() {
+  if(isTyping && currentTypewriterLines) {
+    clearTimeout(typeTimeout);
+    const line = currentTypewriterLines[currentLineIdx];
+    document.getElementById('bubble-text').textContent = line;
+    document.getElementById('dialog-text').textContent = line;
+    document.getElementById('next-indicator').style.display = 'inline-block';
+    isTyping = false;
+  }
+}
+
+function triggerPatron(key) {
+  Audio8.select();
+  const d = DIALOGS[key]; if(!d) return;
+  const bubble = document.getElementById('patron-bubble');
+  const txt = document.getElementById('bubble-text');
+  const spk = document.getElementById('bubble-speaker');
+  const cursor = document.getElementById('bubble-cursor');
+  const speaker = document.getElementById('speaker-name');
+  const dialog = document.getElementById('dialog-text');
+  const choices = document.getElementById('choices-container');
+  const next = document.getElementById('next-indicator');
+  speaker.textContent = d.name;
+  bubble.style.display = 'block';
+  spk.textContent = d.name;
+  choices.style.visibility = 'hidden';
+  next.style.display = 'none';
+  cursor.style.display = 'inline-block';
+  currentTypewriterLines = d.lines;
+  currentLineIdx = 0;
+
+  function showLine(idx) {
+    currentLineIdx = idx;
+    if(idx >= d.lines.length) {
+      next.style.display = 'none'; choices.style.visibility = 'visible';
+      cursor.style.display = 'none'; isTyping = false; return;
+    }
+    const line = d.lines[idx];
+    txt.textContent = ''; dialog.textContent = '';
+    if(typeTimeout) clearTimeout(typeTimeout);
+    let ci = 0; isTyping = true;
+    function type() {
+      if(ci < line.length) {
+        txt.textContent += line[ci]; dialog.textContent = txt.textContent;
+        Audio8.typed(); ci++;
+        typeTimeout = setTimeout(type, 45);
+      } else {
+        next.style.display = 'inline-block'; isTyping = false;
+        bubble.onclick = () => { next.style.display='none'; showLine(idx+1); };
+        dialog.onclick = () => { next.style.display='none'; showLine(idx+1); };
+      }
+    }
+    type();
+  }
+  showLine(0);
+}
+
+/* ================================================================
+   KEEPER CLICK EASTER EGG
+   ================================================================ */
+let keeperClicks = 0;
+let keeperClickTimer = null;
+function keeperClickCount() {
+  keeperClicks++;
+  clearTimeout(keeperClickTimer);
+  keeperClickTimer = setTimeout(() => { keeperClicks = 0; }, 3000);
+
+  if(keeperClicks === 5) {
+    triggerPatron('abus_angry');
+    document.getElementById('keeper-emoji').textContent = '😡';
+    setTimeout(() => { document.getElementById('keeper-emoji').textContent = '👩‍🦰'; keeperClicks = 0; }, 3000);
+  } else if(keeperClicks >= 8) {
+    keeperClicks = 0;
+    Audio8.secret();
+    triggerPatron('abus_special');
+    document.getElementById('keeper-emoji').textContent = '🌟';
+    spawnGlobalFloat('🌟 ABUS SECRET DISCOVERED!', '#facc15');
+    setTimeout(() => { document.getElementById('keeper-emoji').textContent = '👩‍🦰'; }, 5000);
+  } else {
+    triggerPatron('keeper');
+  }
+}
+
+/* ================================================================
+   TREASURE CHEST EASTER EGG
+   ================================================================ */
+let chestOpened = false;
+function openChest() {
+  if(chestOpened) { Audio8.error(); spawnGlobalFloat('空箱子了…', '#94a3b8'); return; }
+  Audio8.chest();
+  chestOpened = true;
+  document.getElementById('treasure-chest').textContent = '📦';
+  const roll = Math.random();
+  if(roll < 0.05) {
+    // Ultra rare (5%)
+    triggerPatron('chest_ultra');
+    spawnGlobalFloat('🌟 ULTRA RARE!', '#facc15');
+    spawnGlobalFloat('稱號解鎖！', '#a855f7');
+    unlockSecretTitle('宇宙第一勇者');
+  } else if(roll < 0.25) {
+    // Rare (20%)
+    triggerPatron('chest_rare');
+    spawnGlobalFloat('💎 RARE ITEM!', '#38bdf8');
+    unlockSecretTitle('酒館常客');
+  } else {
+    triggerPatron('chest_common');
+    spawnGlobalFloat('💰 +50 GOLD', '#facc15');
+  }
+  // Respawn after 30 seconds
+  setTimeout(() => { chestOpened = false; document.getElementById('treasure-chest').textContent = '🎁'; }, 30000);
+}
+
+function unlockSecretTitle(title) {
+  const area = document.getElementById('secret-title-area');
+  const chip = document.getElementById('secret-title-chip');
+  chip.textContent = title;
+  area.style.display = 'block';
+}
+
+/* ================================================================
+   DICE MINI GAME
+   ================================================================ */
+let diceStreak = 0;
+function openDice() { Audio8.select(); document.getElementById('dice-modal').classList.add('active'); }
+function closeDice() { Audio8.select(); document.getElementById('dice-modal').classList.remove('active'); }
+function rollDice() {
+  Audio8.dice();
+  const display = document.getElementById('dice-display');
+  const result = document.getElementById('dice-result');
+  const scoreDisplay = document.getElementById('dice-score-display');
+  let spins = 0;
+  const DICE = ['⚀','⚁','⚂','⚃','⚄','⚅'];
+  const interval = setInterval(() => {
+    const d1 = Math.floor(Math.random()*6), d2 = Math.floor(Math.random()*6);
+    display.textContent = DICE[d1] + ' ' + DICE[d2];
+    Audio8.dice(); spins++;
+    if(spins > 12) {
+      clearInterval(interval);
+      const v1 = d1+1, v2 = d2+1, total = v1+v2;
+      if(v1===6 && v2===6) {
+        diceStreak++; Audio8.victory();
+        result.textContent = '🎉 雙六！傳說！！EXP +999!';
+        result.style.color = '#facc15';
+        spawnGlobalFloat('🎰 JACKPOT!! 雙6！', '#facc15');
+        unlockSecretTitle('天選之人');
+        spawnGlobalFloat('稱號「天選之人」解鎖！', '#a855f7');
+      } else if(v1===v2) {
+        diceStreak++; Audio8.confirm();
+        result.textContent = `✨ 對子！${v1}+${v2}=${total}！連勝 ${diceStreak} 次！`;
+        result.style.color = '#22c55e';
+        if(diceStreak >= 3) { spawnGlobalFloat(`🔥 ${diceStreak} 連勝！`, '#f97316'); unlockSecretTitle('骰神'); }
+      } else if(total >= 10) {
+        diceStreak++; Audio8.select();
+        result.textContent = `⚔️ 大！${v1}+${v2}=${total}！`;
+        result.style.color = '#38bdf8';
+      } else {
+        diceStreak = 0;
+        result.textContent = `💧 小...${v1}+${v2}=${total}。連勝歸零。`;
+        result.style.color = '#94a3b8';
+      }
+      document.getElementById('dice-streak-count').textContent = diceStreak;
+      document.getElementById('hud-dice').textContent = diceStreak;
+      scoreDisplay.textContent = `點數 ${total} / 12`;
+    }
+  }, 80);
+}
+
+/* ================================================================
+   ROAMING MONSTER SYSTEM
+   ================================================================ */
+let monsterData = null;
+let monsterMoveInterval = null;
+const MONSTERS = [
+  { name:'🐉 迷路小龍', sprite:'🐉', hp:30, reward:'龍裔', exp:150 },
+  { name:'👹 怪異歐吉桑', sprite:'👹', hp:45, reward:'打怪達人', exp:300 },
+  { name:'💀 找酒的骷髏', sprite:'💀', hp:20, reward:'骨頭獵人', exp:80 },
+  { name:'🧌 酒窖巨魔', sprite:'🧌', hp:80, reward:'巨魔剋星', exp:500 },
+  { name:'👾 8-BIT 幽靈', sprite:'👾', hp:25, reward:'除靈師', exp:120 },
+];
+let monsterHp = 0, monsterMaxHp = 0, playerKills = 0;
+
+function spawnMonsterAfterDelay() {
+  setTimeout(spawnMonster, 8000);
+}
+
+function spawnMonster() {
+  const mon = document.getElementById('roaming-monster');
+  const pick = MONSTERS[Math.floor(Math.random()*MONSTERS.length)];
+  monsterData = pick;
+  mon.textContent = pick.sprite;
+  mon.style.display = 'block';
+  mon.style.left = '10px';
+  mon.style.transition = 'left 8s linear';
+  // Animate across screen
+  clearInterval(monsterMoveInterval);
+  let pos = -50;
+  mon.style.left = pos + 'px';
+  requestAnimationFrame(() => {
+    mon.style.left = (window.innerWidth + 60) + 'px';
+  });
+  // Respawn
+  setTimeout(() => {
+    mon.style.display = 'none';
+    setTimeout(spawnMonster, 15000 + Math.random()*20000);
+  }, 10000);
+}
+
+function startBattle() {
+  if(!monsterData) return;
+  Audio8.battle();
+  const mon = document.getElementById('roaming-monster');
+  mon.style.display = 'none';
+  monsterHp = monsterData.hp; monsterMaxHp = monsterData.hp;
+  document.getElementById('monster-name').textContent = monsterData.name;
+  document.getElementById('monster-sprite').textContent = monsterData.sprite;
+  document.getElementById('monster-hp-text').textContent = monsterHp;
+  document.getElementById('monster-hp-fill').style.width = '100%';
+  document.getElementById('battle-log').textContent = monsterData.name + ' 出現了！';
+  document.getElementById('battle-modal').classList.add('active');
+}
+
+function battleAction(action) {
+  if(monsterHp <= 0) return;
+  let dmg = 0, msg = '';
+  Audio8.hit();
+  if(action === 'attack') {
+    dmg = 10 + Math.floor(Math.random() * (avatar.stats.atk/3 + 15));
+    msg = `⚔️ 攻擊！造成 ${dmg} 點傷害！`;
+  } else if(action === 'magic') {
+    dmg = 15 + Math.floor(Math.random() * (avatar.stats.mp/4 + 10));
+    msg = `✨ 魔法攻擊！造成 ${dmg} 點魔法傷害！`;
+  } else if(action === 'item') {
+    dmg = Math.random() < 0.3 ? monsterHp : 5 + Math.floor(Math.random()*20);
+    msg = dmg >= monsterHp ? `🍺 丟啤酒命中要害！一擊必殺！` : `🍺 啤酒砸中！造成 ${dmg} 傷害！`;
+  } else if(action === 'run') {
+    if(Math.random() < 0.5) {
+      document.getElementById('battle-log').textContent = '💨 成功逃跑！（膽小鬼）';
+      setTimeout(() => {
+        document.getElementById('battle-modal').classList.remove('active');
+        setTimeout(spawnMonster, 20000);
+      }, 1200);
+    } else {
+      document.getElementById('battle-log').textContent = '💨 逃跑失敗！敵人反擊！';
+      const playerDmg = Math.floor(Math.random()*10)+5;
+      spawnGlobalFloat('-' + playerDmg + ' HP!', '#ef4444');
+    }
+    return;
+  }
+  monsterHp = Math.max(0, monsterHp - dmg);
+  const pct = (monsterHp/monsterMaxHp)*100;
+  document.getElementById('monster-hp-fill').style.width = pct+'%';
+  document.getElementById('monster-hp-text').textContent = monsterHp;
+  document.getElementById('battle-log').textContent = msg;
+  spawnGlobalFloat('-' + dmg, '#ef4444');
+  if(monsterHp <= 0) {
+    Audio8.victory();
+    playerKills++;
+    document.getElementById('hud-kills').textContent = playerKills + ' KILLS';
+    document.getElementById('battle-log').textContent = `🏆 擊敗 ${monsterData.name}！EXP +${monsterData.exp}！`;
+    spawnGlobalFloat(`EXP +${monsterData.exp}`, '#22c55e');
+    spawnGlobalFloat('MONSTER DOWN!', '#facc15');
+    unlockSecretTitle(monsterData.reward);
+    if(playerKills >= 3) { spawnGlobalFloat('🏆 稱號「怪物剋星」解鎖！', '#a855f7'); unlockSecretTitle('怪物剋星'); }
+    setTimeout(() => {
+      document.getElementById('battle-modal').classList.remove('active');
+      monsterData = null;
+      setTimeout(spawnMonster, 20000 + Math.random()*30000);
+    }, 2500);
+  }
+}
+
+/* ================================================================
+   KONAMI CODE EASTER EGG
+   ================================================================ */
+const KONAMI = ['ArrowUp','ArrowUp','ArrowDown','ArrowDown','ArrowLeft','ArrowRight','ArrowLeft','ArrowRight','b','a'];
+let konamiIdx = 0;
+const konamiEmojis = ['⬆','⬆','⬇','⬇','⬅','➡','⬅','➡','🅱','🅰'];
+
+document.addEventListener('keydown', e => {
+  if(e.key === KONAMI[konamiIdx]) {
+    konamiIdx++;
+    const prog = document.getElementById('konami-progress');
+    prog.textContent = konamiEmojis.slice(0,konamiIdx).join('') + (konamiIdx < 10 ? '…' : '');
+    prog.style.opacity = '1';
+    if(konamiIdx >= KONAMI.length) {
+      konamiIdx = 0;
+      prog.style.opacity = '0';
+      triggerKonamiSecret();
+    }
+  } else {
+    konamiIdx = 0;
+    document.getElementById('konami-progress').style.opacity = '0';
+  }
+});
+
+// Title bar click (also counts)
+let titleClicks = 0;
+function konami_titleClick() {
+  titleClicks++;
+  if(titleClicks >= 10) { titleClicks = 0; triggerKonamiSecret(); }
+}
+
+function triggerKonamiSecret() {
+  Audio8.secret();
+  showSecret(
+    '🌟 KONAMI CODE 解鎖 🌟',
+    '傳說中的代碼已輸入！\n你喚醒了酒館地底的隱藏 BOSS——\n「同學會的悔恨之靈」！',
+    '稱號「密碼破解者」已解鎖！\nEXP +99999 💥'
+  );
+  unlockSecretTitle('密碼破解者');
+  spawnGlobalFloat('🔓 KONAMI CODE!!', '#facc15');
+  spawnGlobalFloat('EXP +99999', '#22c55e');
+}
+
+function showSecret(title, desc, reward) {
+  document.getElementById('secret-title').textContent = title;
+  document.getElementById('secret-desc').textContent = desc;
+  document.getElementById('secret-reward').textContent = reward;
+  document.getElementById('secret-modal').classList.add('active');
+}
+function closeSecret() {
+  Audio8.select();
+  document.getElementById('secret-modal').classList.remove('active');
+}
+
+/* ================================================================
+   PATRON DIALOG + DRINK ACTION
+   ================================================================ */
+window.addEventListener('DOMContentLoaded', () => {
+  if(avatar.name) document.getElementById('char-name').value = avatar.name;
+  initOptButtons(); updateStatBars(); drawAvatar();
+  saveAvatar(); // sync HUD
+});
+
+function drinkAction() {
+  Audio8.confirm();
+  spawnGlobalFloat('💛 FAVOR +999!', '#facc15');
+  triggerPatron('keeper');
+}
+
+/* ================================================================
+   RSVP LOGIC
+   ================================================================ */
+let attending = null;
+let isSubmitting = false;
+
+function onNameInput(val) {
+  avatar.name = val;
+  document.getElementById('party-name').textContent = val || '冒險者';
+  document.getElementById('hud-name').textContent = val || '（未登記）';
+  updateSubmitBtn();
+}
+function selectAttend(v) {
+  Audio8.select(); attending = v;
+  document.getElementById('btn-yes').classList.toggle('selected', v==='yes');
+  document.getElementById('btn-no').classList.toggle('selected', v==='no');
+  updateSubmitBtn();
+  const hpBar = document.getElementById('hp-bar');
+  const hpText = document.getElementById('hp-text');
+  if(v==='yes') { hpBar.style.width='100%'; hpText.textContent='100% / 100%'; spawnDmg('POWER STRIKE! ⚔️',true); }
+  else { hpBar.style.width='40%'; hpText.textContent='40% / 100%'; spawnDmg('HP -60! 😢',false); }
+}
+function updateSubmitBtn() {
+  const name = document.getElementById('name-input').value.trim();
+  document.getElementById('submit-btn').disabled = !(name && attending);
+}
+function spawnDmg(text, good) {
+  const c = document.getElementById('damage-container');
+  const el = document.createElement('div');
+  el.className = 'dmg-float'; el.textContent = text;
+  el.style.color = good ? '#facc15' : '#ef4444';
+  el.style.left = (20+Math.random()*60)+'%'; el.style.top = (30+Math.random()*30)+'%';
+  c.appendChild(el); setTimeout(() => el.remove(), 1300);
+}
+function spawnGlobalFloat(text, color='#facc15') {
+  const el = document.createElement('div');
+  el.className = 'dmg-float'; el.textContent = text; el.style.color = color;
+  el.style.left = (20+Math.random()*60)+'%'; el.style.top = (20+Math.random()*40)+'%';
+  el.style.fontSize = '12px'; el.style.position = 'fixed';
+  document.getElementById('global-float').appendChild(el);
+  setTimeout(() => el.remove(), 1600);
+}
+
+async function submitRSVP() {
+  const name = document.getElementById('name-input').value.trim();
+  const msg  = document.getElementById('msg-input').value.trim();
+  const err  = document.getElementById('error-msg');
+  if(!name || !attending) { Audio8.error(); return; }
+  if(isSubmitting) return;
+  isSubmitting = true;
+  const btn = document.getElementById('submit-btn');
+  btn.textContent = '傳送計畫中...'; btn.disabled = true; Audio8.hit();
+  const prog = document.createElement('div');
+  prog.className = 'pixel-progress-wrap'; prog.style.margin = '10px 0';
+  prog.innerHTML = '<div class="pixel-progress-bar" id="submit-prog"></div>';
+  btn.after(prog);
+  let pw = 0;
+  const progInt = setInterval(() => {
+    pw = Math.min(pw+8, 90);
+    const bar = document.getElementById('submit-prog');
+    if(bar) bar.style.width = pw+'%';
+  }, 80);
+  let ok = false;
+  try {
+    if(!GOOGLE_SCRIPT_URL || GOOGLE_SCRIPT_URL.includes('YOUR_GOOGLE')) {
+      await new Promise(r => setTimeout(r, 1200)); ok = true;
+    } else {
+      await fetch(GOOGLE_SCRIPT_URL, {
+        method:'POST', mode:'no-cors',
+        headers:{'Content-Type':'application/x-www-form-urlencoded'},
+        body: new URLSearchParams({ name, attending, message:msg, title:avatar.title||'', submitted_at:new Date().toISOString() })
+      });
+      ok = true;
+    }
+  } catch(e) { console.error(e); }
+  clearInterval(progInt);
+  const pb = document.getElementById('submit-prog');
+  if(pb) pb.style.width = '100%';
+  setTimeout(() => {
+    if(prog.parentNode) prog.remove();
+    if(ok) {
+      Audio8.victory();
+      spawnGlobalFloat('🎉 QUEST COMPLETE!', '#facc15');
+      spawnGlobalFloat('EXP +9999', '#22c55e');
+      document.getElementById('rsvp-form').style.display = 'none';
+      const sv = document.getElementById('success-view');
+      sv.classList.add('active');
+      document.getElementById('success-text').textContent =
+        attending==='yes'
+          ? `【 ${name} 】 成功與隊伍會合！大夥在等你了！`
+          : `【 ${name} 】 雖無法加入，我們的心與你同在！`;
+      document.getElementById('hp-bar').style.width = '0%';
+      document.getElementById('hp-text').textContent = '0% / 100% (VICTORY!)';
+      document.getElementById('boss-status').textContent = 'DEFEATED ★';
+    } else {
+      Audio8.error();
+      err.textContent = '【 傳送失敗 】 連線超時，請再度扣關！';
+      err.style.display = 'block';
+      btn.textContent = '★ 發送作戰計畫 ★'; btn.disabled = false;
+    }
+    isSubmitting = false;
+  }, 400);
+}
+
+function resetAdventure() {
+  Audio8.select();
+  document.getElementById('rsvp-form').style.display = 'block';
+  document.getElementById('success-view').classList.remove('active');
+  document.getElementById('msg-input').value = '';
+  document.getElementById('hp-bar').style.width = '100%';
+  document.getElementById('hp-text').textContent = '100% / 100%';
+  document.getElementById('boss-status').textContent = 'READY TO RAID';
+  attending = null;
+  document.getElementById('btn-yes').classList.remove('selected');
+  document.getElementById('btn-no').classList.remove('selected');
+  updateSubmitBtn(); switchScreen('home');
+}
+</script>
 </body>
 </html>
